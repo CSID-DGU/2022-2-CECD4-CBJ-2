@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,7 +82,6 @@ public class TabFragment1 extends Fragment {
             int y = step_count[i];
             values.add(new BarEntry(x, y));
         }
-
         BarDataSet set1 = new BarDataSet(values, label);
         set1.setColor(Color.rgb(30,190,230));
 
