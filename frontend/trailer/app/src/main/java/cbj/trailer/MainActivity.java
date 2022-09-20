@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         final ViewPager viewPager = findViewById(R.id.pager);
+        //final PagerAdapter adapter = new PagerAdapter
+        //        (getSupportFragmentManager(), tabLayout.getTabCount(), new int[]{1, 2, 3, 4, 5, 0, 0, 0, 0, 4, 0, 3, 0, 0});
         final PagerAdapter adapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount(), this.getIntent().getIntArrayExtra("health_info"));
 

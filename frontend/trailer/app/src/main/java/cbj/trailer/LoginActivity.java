@@ -52,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressBar login_progressbar;
     private final int REQUEST_OAUTH_REQUEST_CODE = 1;
     private final String TAG = "BasicHistoryAPI";
-    private int [] health_data = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    private int [] health_data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +127,10 @@ public class LoginActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View v) {
+                health_data = new int[14];
+                for(int i=0; i<14; i++){
+                    health_data[i] = 0;
+                }
                 tryLogin();
             }                 // 로그인을 시도함
         });
@@ -225,7 +229,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public synchronized void subscribe(){
-        System.out.println("MainActivity.subscribe");
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
                 .addOnCompleteListener(
@@ -235,18 +238,23 @@ public class LoginActivity extends AppCompatActivity {
                                 if (task.isSuccessful()){
                                     Log.w(TAG, "Successfully subscribed!");
                                     readDataMy();
-                                    Log.w("걸음수2", Integer.toString(health_data[0]));
-                                    Log.w("걸음수2", Integer.toString(health_data[1]));
-                                    Log.w("걸음수2", Integer.toString(health_data[2]));
-                                    Log.w("걸음수2", Integer.toString(health_data[3]));
-                                    Log.w("걸음수2", Integer.toString(health_data[4]));
-                                    Log.w("걸음수2", Integer.toString(health_data[5]));
-                                    Log.w("걸음수2", Integer.toString(health_data[6]));
-                                    Log.w("걸음수2", Integer.toString(health_data[7]));
-                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                    intent.putExtra("health_info", health_data);
-                                    startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
-                                    finish();
+                                    new Handler().postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Log.w("걸음수2", Integer.toString(health_data[0]));
+                                            Log.w("걸음수2", Integer.toString(health_data[1]));
+                                            Log.w("걸음수2", Integer.toString(health_data[2]));
+                                            Log.w("걸음수2", Integer.toString(health_data[3]));
+                                            Log.w("걸음수2", Integer.toString(health_data[4]));
+                                            Log.w("걸음수2", Integer.toString(health_data[5]));
+                                            Log.w("걸음수2", Integer.toString(health_data[6]));
+                                            Log.w("걸음수2", Integer.toString(health_data[7]));
+                                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                            intent.putExtra("health_info", health_data);
+                                            startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
+                                            finish();
+                                        }
+                                    },1000);
                                 }else{
                                     Log.w("ErrorError:", task.getException());
                                 }
@@ -326,7 +334,8 @@ public class LoginActivity extends AppCompatActivity {
 
                             health_data[finalCount] = totalStep;
                             health_data[finalCount +7] = totalHeartPointsInt;
-                            Log.w("걸음수1", String.valueOf(health_data[finalCount]));
+                            Log.w("걸음수1", Integer.toString(finalCount));
+                            Log.w("걸음수1", Integer.toString(health_data[finalCount]));
                         }
                     });
         }
