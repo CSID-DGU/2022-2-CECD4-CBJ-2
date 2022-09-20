@@ -52,7 +52,9 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressBar login_progressbar;
     private final int REQUEST_OAUTH_REQUEST_CODE = 1;
     private final String TAG = "BasicHistoryAPI";
-    private int [] health_data;
+    private int [] health_data_day;
+    private int [] health_data_week;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,9 +129,13 @@ public class LoginActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View v) {
-                health_data = new int[14];
+                health_data_day = new int[14];
                 for(int i=0; i<14; i++){
-                    health_data[i] = 0;
+                    health_data_day[i] = 0;
+                }
+                health_data_week = new int[12];
+                for(int i=0; i<12; i++){
+                    health_data_week[i] = 0;
                 }
                 tryLogin();
             }                 // 로그인을 시도함
@@ -237,24 +243,20 @@ public class LoginActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<Void> task){
                                 if (task.isSuccessful()){
                                     Log.w(TAG, "Successfully subscribed!");
-                                    readDataMy();
+                                    readDataDay();
+                                    readDataWeek();
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.w("걸음수2", Integer.toString(health_data[0]));
-                                            Log.w("걸음수2", Integer.toString(health_data[1]));
-                                            Log.w("걸음수2", Integer.toString(health_data[2]));
-                                            Log.w("걸음수2", Integer.toString(health_data[3]));
-                                            Log.w("걸음수2", Integer.toString(health_data[4]));
-                                            Log.w("걸음수2", Integer.toString(health_data[5]));
-                                            Log.w("걸음수2", Integer.toString(health_data[6]));
-                                            Log.w("걸음수2", Integer.toString(health_data[7]));
+                                            for(int i=0; i<6; i++)
+                                                Log.w(Integer.toString(i), Integer.toString(health_data_week[i]));
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                            intent.putExtra("health_info", health_data);
+                                            intent.putExtra("health_info_day", health_data_day);
+                                            intent.putExtra("health_info_week", health_data_week);
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
                                             finish();
                                         }
-                                    },1000);
+                                    },2000);
                                 }else{
                                     Log.w("ErrorError:", task.getException());
                                 }
@@ -263,12 +265,12 @@ public class LoginActivity extends AppCompatActivity {
                 );
     }
 
-    private synchronized void readDataMy() {
+    private void readDataDay() {
         final Calendar cal = Calendar.getInstance();
         Date now = Calendar.getInstance().getTime();
         cal.setTime(now);
 
-        int currentDayofWeek = cal.get(Calendar.DAY_OF_WEEK);
+        int currentDayofWeek = cal.get(Calendar.DAY_OF_WEEK); //현재 요일
         for(int count = 1; count <= currentDayofWeek; count++) {
             final Calendar cal2 = Calendar.getInstance();
             Date now2 = Calendar.getInstance().getTime();
@@ -332,12 +334,174 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
 
-                            health_data[finalCount] = totalStep;
-                            health_data[finalCount +7] = totalHeartPointsInt;
-                            Log.w("걸음수1", Integer.toString(finalCount));
-                            Log.w("걸음수1", Integer.toString(health_data[finalCount]));
+                            health_data_day[finalCount] = totalStep;
+                            health_data_day[finalCount +7] = totalHeartPointsInt;
                         }
                     });
+        }
+    }
+
+    private void readDataWeek() {
+        final Calendar cal = Calendar.getInstance();
+        Date now = Calendar.getInstance().getTime();
+        cal.setTime(now);
+
+        // 28 29 30 31 1 2 3
+        // 4  5  6  7  8 9 10
+        // 11 12 13 14 15 16 17
+        // 18 19 20
+        int currentDay = cal.get(Calendar.DATE); //현재 몇일인지 저장하는 변수(20)
+        int currentDayofWeek = cal.get(Calendar.DAY_OF_WEEK); //현재 요일(3)
+        int temp = (int)((currentDay - currentDayofWeek+1) / 7) + 1; //3
+        if ((currentDay - currentDayofWeek+1) % 7 != 0.0){
+            temp+=1; //4
+        }
+
+        for(int i = temp; i>0; i--) {
+            if (i == temp) {
+                for (int count = 1; count <= currentDayofWeek; count++) {
+                    final Calendar cal2 = Calendar.getInstance();
+                    Date now2 = Calendar.getInstance().getTime();
+                    cal2.setTime(now2);
+                    // 시작 시간
+                    cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
+                            cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+                    cal2.add(Calendar.DAY_OF_MONTH, -currentDayofWeek + count);
+                    long startTime = cal2.getTimeInMillis();
+
+                    final Calendar cal3 = Calendar.getInstance();
+                    Date now3 = Calendar.getInstance().getTime();
+                    cal3.setTime(now3);
+                    // 종료 시간
+                    cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                            cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                    cal3.add(Calendar.DAY_OF_MONTH, -currentDayofWeek + count);
+                    long endTime = cal3.getTimeInMillis();
+
+                    int finalCount = i- 1;
+                    Fitness.getHistoryClient(this,
+                                    GoogleSignIn.getLastSignedInAccount(this))
+                            .readData(new DataReadRequest.Builder()
+                                    .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                                    .read(DataType.TYPE_HEART_POINTS) // Raw 심장 점수
+                                    .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                                    .build())
+                            .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                                @Override
+                                public void onSuccess(DataReadResponse response) {
+                                    int totalStep = 0;
+                                    long totalStepTimeNumber = 0;
+                                    float totalHeartPointsFloat = 0;
+                                    int totalHeartPointsInt = 0;
+                                    String totalStepTimeString = "";
+
+                                    DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+                                    DataSet dataSetHeartPoint = response.getDataSet(DataType.TYPE_HEART_POINTS);
+
+                                    //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                                    for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                        totalStepTimeNumber += dpStep.getEndTime(TimeUnit.MILLISECONDS) - dpStep.getStartTime(TimeUnit.MILLISECONDS);
+
+                                        for (Field field : dpStep.getDataType().getFields()) {
+                                            totalStep += dpStep.getValue(field).asInt();
+                                        }
+                                    }
+
+                                    //걸은 시간을 형식에 맞춰서 문자열에 저장
+                                    if (totalStepTimeNumber > 0) {
+                                        totalStepTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber),
+                                                TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber)),
+                                                TimeUnit.MILLISECONDS.toSeconds(totalStepTimeNumber) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber)));
+                                    }
+
+                                    //총 심장 점수 측정
+                                    for (DataPoint dpHea : dataSetHeartPoint.getDataPoints()) {
+                                        for (Field field : dpHea.getDataType().getFields()) {
+                                            totalHeartPointsFloat += dpHea.getValue(field).asFloat();
+                                        }
+                                    }
+                                    totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
+
+                                    health_data_week[finalCount] += totalStep;
+                                    health_data_week[finalCount + 6] += totalHeartPointsInt;
+                                    //Log.w("걸음수", Integer.toString(finalCount));
+                                    //Log.w("걸음수", Integer.toString(totalStep));
+                                }
+                            });
+                }
+            }
+            else{
+                for (int count = 1; count <= 7; count++) {
+                    final Calendar cal3 = Calendar.getInstance();
+                    Date now3 = Calendar.getInstance().getTime();
+                    cal3.setTime(now3);
+                    // 시작 시간
+                    cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                            cal3.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+                    cal3.add(Calendar.DAY_OF_MONTH, -currentDayofWeek - 7*(temp-i) + count);
+                    long startTime = cal3.getTimeInMillis();
+
+                    final Calendar cal4 = Calendar.getInstance();
+                    Date now4 = Calendar.getInstance().getTime();
+                    cal4.setTime(now4);
+                    // 종료 시간
+                    cal4.set(cal4.get(Calendar.YEAR), cal4.get(Calendar.MONTH),
+                            cal4.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                    cal4.add(Calendar.DAY_OF_MONTH, -currentDayofWeek - 7*(temp-i) + count);
+                    long endTime = cal4.getTimeInMillis();
+
+                    int finalCount = i- 1;
+                    Fitness.getHistoryClient(this,
+                                    GoogleSignIn.getLastSignedInAccount(this))
+                            .readData(new DataReadRequest.Builder()
+                                    .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                                    .read(DataType.TYPE_HEART_POINTS) // Raw 심장 점수
+                                    .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                                    .build())
+                            .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                                @Override
+                                public void onSuccess(DataReadResponse response) {
+                                    int totalStep = 0;
+                                    long totalStepTimeNumber = 0;
+                                    float totalHeartPointsFloat = 0;
+                                    int totalHeartPointsInt = 0;
+                                    String totalStepTimeString = "";
+
+                                    DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+                                    DataSet dataSetHeartPoint = response.getDataSet(DataType.TYPE_HEART_POINTS);
+
+                                    //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                                    for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                        totalStepTimeNumber += dpStep.getEndTime(TimeUnit.MILLISECONDS) - dpStep.getStartTime(TimeUnit.MILLISECONDS);
+
+                                        for (Field field : dpStep.getDataType().getFields()) {
+                                            totalStep += dpStep.getValue(field).asInt();
+                                        }
+                                    }
+
+                                    //걸은 시간을 형식에 맞춰서 문자열에 저장
+                                    if (totalStepTimeNumber > 0) {
+                                        totalStepTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber),
+                                                TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber)),
+                                                TimeUnit.MILLISECONDS.toSeconds(totalStepTimeNumber) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber)));
+                                    }
+
+                                    //총 심장 점수 측정
+                                    for (DataPoint dpHea : dataSetHeartPoint.getDataPoints()) {
+                                        for (Field field : dpHea.getDataType().getFields()) {
+                                            totalHeartPointsFloat += dpHea.getValue(field).asFloat();
+                                        }
+                                    }
+                                    totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
+
+                                    health_data_week[finalCount] += totalStep;
+                                    health_data_week[finalCount + 6] += totalHeartPointsInt;
+                                    //Log.w("걸음수", Integer.toString(finalCount));
+                                    //Log.w("걸음수", Integer.toString(totalStep));
+                                }
+                            });
+                }
+            }
         }
     }
 }

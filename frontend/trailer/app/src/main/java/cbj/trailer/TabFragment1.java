@@ -29,13 +29,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TabFragment1 extends Fragment {
 
     private static final int MAX_X_VALUE = 7;
-    private static final int MAX_Y_VALUE = 10000;
-    private static final int MIN_Y_VALUE = 500;
-    private static final String[] DAYS = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+    private static final String[] DAYS = { "일", "월", "화", "수", "목", "굼", "토" };
 
     private BarChart chart1;
     private BarChart chart2;
-    private int[] data = new int[13];
+    private int[] data;
     public TabFragment1(int [] data) {
         // Required empty public constructor
         this.data = data;
