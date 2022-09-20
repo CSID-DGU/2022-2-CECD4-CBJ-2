@@ -8,12 +8,14 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     private int numOfTabs;
-    private int [] data;
+    private int [] dayOfWeekData;
+    private int [] weeklyData;
 
-    public PagerAdapter(@NonNull FragmentManager fm, int numOfTabs, int [] data) {
+    public PagerAdapter(@NonNull FragmentManager fm, int numOfTabs, int [] dayOfWeekData, int [] weeklyData) {
         super(fm);
         this.numOfTabs = numOfTabs;
-        this.data = data;
+        this.dayOfWeekData = dayOfWeekData;
+        this.weeklyData = weeklyData;
     }
 
     @Nullable
@@ -34,9 +36,9 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new TabFragment1(data);
+                return new TabFragment1(dayOfWeekData);
             case 1:
-                return new TabFragment2();
+                return new TabFragment2(weeklyData);
             default:
                 return null;
         }

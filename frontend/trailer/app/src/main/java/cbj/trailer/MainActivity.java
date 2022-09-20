@@ -44,15 +44,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //int [] data = this.getIntent().getIntArrayExtra("health_info");
-        //Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[0]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[0]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[1]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[2]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[3]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[4]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[5]));
-        Log.w("걸음수Main", Integer.toString(this.getIntent().getIntArrayExtra("health_info")[6]));
         androidx.appcompat.widget.Toolbar toolbar =
                 findViewById(R.id.toolbar);
 
@@ -66,10 +57,9 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         final ViewPager viewPager = findViewById(R.id.pager);
-        //final PagerAdapter adapter = new PagerAdapter
-        //        (getSupportFragmentManager(), tabLayout.getTabCount(), new int[]{1, 2, 3, 4, 5, 0, 0, 0, 0, 4, 0, 3, 0, 0});
+
         final PagerAdapter adapter = new PagerAdapter
-                (getSupportFragmentManager(), tabLayout.getTabCount(), this.getIntent().getIntArrayExtra("health_info"));
+                (getSupportFragmentManager(), tabLayout.getTabCount(), this.getIntent().getIntArrayExtra("health_info_day"), this.getIntent().getIntArrayExtra("health_info_week"));
 
         viewPager.setAdapter(adapter);
 
