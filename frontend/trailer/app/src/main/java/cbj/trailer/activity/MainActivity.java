@@ -1,4 +1,4 @@
-package cbj.trailer;
+package cbj.trailer.activity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -35,6 +35,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import cbj.trailer.adapter.PagerAdapter;
+import cbj.trailer.R;
 
 public class MainActivity extends AppCompatActivity {
 

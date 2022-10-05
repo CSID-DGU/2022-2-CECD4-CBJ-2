@@ -1,14 +1,14 @@
-package cbj.trailer;
+package cbj.trailer.activity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,9 +35,20 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import cbj.trailer.R;
+import cbj.trailer.data.LoginRequest;
+import cbj.trailer.data.LoginResponse;
+import cbj.trailer.network.ServiceApi;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -49,18 +60,30 @@ public class LoginActivity extends AppCompatActivity {
     private String pwd;
     private boolean input_id;
     private boolean input_pwd;
+    private boolean isAutomatic = false;
     private ProgressBar login_progressbar;
     private final int REQUEST_OAUTH_REQUEST_CODE = 1;
+    private ServiceApi service;
+    private SharedPreferences preferences;
     private final String TAG = "BasicHistoryAPI";
     private int [] health_data_day;
     private int [] health_data_week;
+    String[] stepsOf3weeks = new String[42];
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
 
+        //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
+        /**
+        if (preferences.getString("my_cookie", "") != ""){
+            isAutomatic = true;
+            startAutomaticLogin();
+        }
+         **/
         login_id = findViewById(R.id.login_id);
         login_pwd = findViewById(R.id.login_pwd);
 
@@ -129,14 +152,6 @@ public class LoginActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View v) {
-                health_data_day = new int[14];
-                for(int i=0; i<14; i++){
-                    health_data_day[i] = 0;
-                }
-                health_data_week = new int[12];
-                for(int i=0; i<12; i++){
-                    health_data_week[i] = 0;
-                }
                 tryLogin();
             }                 // 로그인을 시도함
         });
@@ -144,8 +159,8 @@ public class LoginActivity extends AppCompatActivity {
         join_btn.setOnClickListener(new View.OnClickListener() {        // 버튼을 클릭 했을 때 모션을 정의
             @Override
             public void onClick(View v) {
-                //Intent intent = new Intent(getApplicationContext(), JoinActivity.class);
-                //startActivity(intent);                                  // 회원가입 액티비티로 넘어감
+                Intent intent = new Intent(getApplicationContext(), JoinActivity.class);
+                startActivity(intent);                                  // 회원가입 액티비티로 넘어감
             }
         });
     }
@@ -155,12 +170,12 @@ public class LoginActivity extends AppCompatActivity {
         id = login_id.getText().toString();                             // id에 입력된 input을 넣어줌
         pwd = login_pwd.getText().toString();                           // password에 입력된 input을 넣어줌
 
-        //login_progressbar.setVisibility(View.VISIBLE);                  // progressbar를 활성화 해주고
+        login_progressbar.setVisibility(View.VISIBLE);                  // progressbar를 활성화 해주고
+        startAutomaticLogin();
         //startLogin(new LoginRequest(id, pwd));                          // 로그인을 시작함
-        startLogin();
     }
 
-    /**
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void startLogin(LoginRequest data) {                        // 로그인을 하는 함수(이전에 설명했으므로 요약함)
         service.userLogin(data).enqueue(new Callback<LoginResponse>() {
 
@@ -168,11 +183,37 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse user = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                 if (user.getCode() == 200) {                            // 로그인 성공이라면
-                    Toast.makeText(LoginActivity.this, user.getUserName() + "님 환영합니다.", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    intent.putExtra("UserID", id);
-                    intent.putExtra("UserName", user.getUserName());
-                    startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
+                    //로그인 이력 있는 경우 바로 Main
+                    //로그인 이력 없는 경우 권한 요청 후 데이터 받아서 넘김
+                    // 데이터를 읽어올 때 필요한 권한들 정의
+                    FitnessOptions fitnessOptions =
+                            FitnessOptions.builder()
+                                    .addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE) // 누적 걸음 수를 조회하기 위해 필요한 권한
+                                    .addDataType(DataType.TYPE_STEP_COUNT_DELTA) // 단위시간별 걸음 수를 확인하기 위해 필요한 권한
+                                    .addDataType(DataType.TYPE_CALORIES_EXPENDED) // 소비된 칼로리양을 확인하기 위해 필요한 권한
+                                    .addDataType(DataType.TYPE_DISTANCE_DELTA) // 이동 거리를 확인하기 위해 필요한 권한
+                                    .addDataType(DataType.TYPE_HEART_POINTS) //심장 점수를 확인하기 위해 필요한 권한
+                                    .build();
+
+                    if(ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
+                        requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION},0);
+                    }
+                    
+                    //이전에 로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("my_cookie", response.headers().get("Set-Cookie"));
+                    
+                    //구글 로그인
+                    if(!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(LoginActivity.this), fitnessOptions)) {
+                        GoogleSignIn.requestPermissions(
+                                LoginActivity.this,
+                                REQUEST_OAUTH_REQUEST_CODE,
+                                GoogleSignIn.getLastSignedInAccount(LoginActivity.this),
+                                fitnessOptions);
+                    } else {
+                        //기존에 로그인 된 이력이 있는 경우
+                        subscribe();
+                    }
                     finish();
                 } else if (user.getCode() == 204)                       // 아이디가 존재하지 않을 경우
                     Toast.makeText(LoginActivity.this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
@@ -188,11 +229,10 @@ public class LoginActivity extends AppCompatActivity {
                 login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
             }
         });
-    }*/
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private void startLogin() {                        // 로그인을 하는 함수(이전에 설명했으므로 요약함)
-        //로그인 이력 있는 경우 바로 Main
-        //로그인 이력 없는 경우 권한 요청 후 데이터 받아서 넘김
+    private void startAutomaticLogin() {                        // 로그인을 하는 함수(이전에 설명했으므로 요약함)
         // 데이터를 읽어올 때 필요한 권한들 정의
         FitnessOptions fitnessOptions =
                 FitnessOptions.builder()
@@ -215,6 +255,7 @@ public class LoginActivity extends AppCompatActivity {
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
+            //기존에 로그인 된 이력이 있는 경우
             subscribe();
         }
     }
@@ -235,6 +276,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public synchronized void subscribe(){
+        health_data_day = new int[14];
+        for(int i=0; i<14; i++){
+            health_data_day[i] = 0;
+        }
+        health_data_week = new int[12];
+        for(int i=0; i<12; i++){
+            health_data_week[i] = 0;
+        }
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
                 .addOnCompleteListener(
@@ -245,11 +294,23 @@ public class LoginActivity extends AppCompatActivity {
                                     Log.w(TAG, "Successfully subscribed!");
                                     readDataDay();
                                     readDataWeek();
+                                    readDataThreeWeeks();
+                                    /**
+                                    if(isAutomatic){
+                                        readDataThreeWeeks();
+                                    }
+                                     */
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
                                             for(int i=0; i<6; i++)
                                                 Log.w(Integer.toString(i), Integer.toString(health_data_week[i]));
+                                            for(int i = 0; i<41; i+=2) {
+                                                String st1 = "날짜" + Integer.toString(i);
+                                                String st2 = "걸음 수" + Integer.toString(i);
+                                                Log.w(st1, stepsOf3weeks[i]);
+                                                Log.w(st2, stepsOf3weeks[i+1]);
+                                            }
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
@@ -269,75 +330,148 @@ public class LoginActivity extends AppCompatActivity {
         final Calendar cal = Calendar.getInstance();
         Date now = Calendar.getInstance().getTime();
         cal.setTime(now);
-
+        //월  화  수  목  금  토  일
+        //일 : 1, 월 : 2, 화 : 3, 수 : 4, 목 : 5, 금 : 6, 토 : 7
         int currentDayofWeek = cal.get(Calendar.DAY_OF_WEEK); //현재 요일
-        for(int count = 1; count <= currentDayofWeek; count++) {
-            final Calendar cal2 = Calendar.getInstance();
-            Date now2 = Calendar.getInstance().getTime();
-            cal2.setTime(now2);
-            // 시작 시간
-            cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
-                    cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-            cal2.add(Calendar.DAY_OF_MONTH, -currentDayofWeek+count);
-            long startTime = cal2.getTimeInMillis();
+        if(currentDayofWeek == 1){
+            for (int count = 6; count >= 0; count--) {
+                final Calendar cal2 = Calendar.getInstance();
+                Date now2 = Calendar.getInstance().getTime();
+                cal2.setTime(now2);
+                // 시작 시간
+                cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
+                        cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+                cal2.add(Calendar.DAY_OF_MONTH, -count);
+                long startTime = cal2.getTimeInMillis();
 
-            final Calendar cal3 = Calendar.getInstance();
-            Date now3 = Calendar.getInstance().getTime();
-            cal3.setTime(now3);
-            // 종료 시간
-            cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
-                    cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
-            cal3.add(Calendar.DAY_OF_MONTH, -currentDayofWeek+count);
-            long endTime = cal3.getTimeInMillis();
+                final Calendar cal3 = Calendar.getInstance();
+                Date now3 = Calendar.getInstance().getTime();
+                cal3.setTime(now3);
+                // 종료 시간
+                cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                        cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                cal3.add(Calendar.DAY_OF_MONTH, -count);
+                long endTime = cal3.getTimeInMillis();
 
-            int finalCount = count-1;
-            Fitness.getHistoryClient(this,
-                            GoogleSignIn.getLastSignedInAccount(this))
-                    .readData(new DataReadRequest.Builder()
-                            .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
-                            .read(DataType.TYPE_HEART_POINTS) // Raw 심장 점수
-                            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                            .build())
-                    .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
-                        @Override
-                        public void onSuccess(DataReadResponse response) {
-                            int totalStep = 0;
-                            long totalStepTimeNumber = 0;
-                            float totalHeartPointsFloat = 0;
-                            int totalHeartPointsInt = 0;
-                            String totalStepTimeString = "";
+                int finalCount = 6-count;
+                Fitness.getHistoryClient(this,
+                                GoogleSignIn.getLastSignedInAccount(this))
+                        .readData(new DataReadRequest.Builder()
+                                .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                                .read(DataType.TYPE_HEART_POINTS) // Raw 심장 점수
+                                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                                .build())
+                        .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                            @Override
+                            public void onSuccess(DataReadResponse response) {
+                                int totalStep = 0;
+                                long totalStepTimeNumber = 0;
+                                float totalHeartPointsFloat = 0;
+                                int totalHeartPointsInt = 0;
+                                String totalStepTimeString = "";
 
-                            DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
-                            DataSet dataSetHeartPoint = response.getDataSet(DataType.TYPE_HEART_POINTS);
+                                DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+                                DataSet dataSetHeartPoint = response.getDataSet(DataType.TYPE_HEART_POINTS);
 
-                            //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
-                            for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
-                                totalStepTimeNumber += dpStep.getEndTime(TimeUnit.MILLISECONDS) - dpStep.getStartTime(TimeUnit.MILLISECONDS);
+                                //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                                for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                    totalStepTimeNumber += dpStep.getEndTime(TimeUnit.MILLISECONDS) - dpStep.getStartTime(TimeUnit.MILLISECONDS);
 
-                                for (Field field : dpStep.getDataType().getFields()) {
-                                    totalStep += dpStep.getValue(field).asInt();
+                                    for (Field field : dpStep.getDataType().getFields()) {
+                                        totalStep += dpStep.getValue(field).asInt();
+                                    }
                                 }
-                            }
 
-                            //걸은 시간을 형식에 맞춰서 문자열에 저장
-                            if (totalStepTimeNumber > 0) {
-                                totalStepTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber),
-                                        TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber)),
-                                        TimeUnit.MILLISECONDS.toSeconds(totalStepTimeNumber) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber)));
-                            }
-
-                            //총 심장 점수 측정
-                            for (DataPoint dpHea : dataSetHeartPoint.getDataPoints()) {
-                                for (Field field : dpHea.getDataType().getFields()) {
-                                    totalHeartPointsFloat += dpHea.getValue(field).asFloat();
+                                //걸은 시간을 형식에 맞춰서 문자열에 저장
+                                if (totalStepTimeNumber > 0) {
+                                    totalStepTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber),
+                                            TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber)),
+                                            TimeUnit.MILLISECONDS.toSeconds(totalStepTimeNumber) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber)));
                                 }
-                            }
-                            totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
 
-                            health_data_day[finalCount] = totalStep;
-                            health_data_day[finalCount +7] = totalHeartPointsInt;
-                        }
-                    });
+                                //총 심장 점수 측정
+                                for (DataPoint dpHea : dataSetHeartPoint.getDataPoints()) {
+                                    for (Field field : dpHea.getDataType().getFields()) {
+                                        totalHeartPointsFloat += dpHea.getValue(field).asFloat();
+                                    }
+                                }
+                                totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
+
+                                health_data_day[finalCount] = totalStep;
+                                health_data_day[finalCount + 7] = totalHeartPointsInt;
+                            }
+                        });
+            }
+        }
+        else {
+            for (int count = 2; count <= currentDayofWeek; count++) {
+                final Calendar cal2 = Calendar.getInstance();
+                Date now2 = Calendar.getInstance().getTime();
+                cal2.setTime(now2);
+                // 시작 시간
+                cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
+                        cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+                cal2.add(Calendar.DAY_OF_MONTH, -currentDayofWeek + count);
+                long startTime = cal2.getTimeInMillis();
+
+                final Calendar cal3 = Calendar.getInstance();
+                Date now3 = Calendar.getInstance().getTime();
+                cal3.setTime(now3);
+                // 종료 시간
+                cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                        cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                cal3.add(Calendar.DAY_OF_MONTH, -currentDayofWeek + count);
+                long endTime = cal3.getTimeInMillis();
+
+                int finalCount = count - 2;
+                Fitness.getHistoryClient(this,
+                                GoogleSignIn.getLastSignedInAccount(this))
+                        .readData(new DataReadRequest.Builder()
+                                .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                                .read(DataType.TYPE_HEART_POINTS) // Raw 심장 점수
+                                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                                .build())
+                        .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                            @Override
+                            public void onSuccess(DataReadResponse response) {
+                                int totalStep = 0;
+                                long totalStepTimeNumber = 0;
+                                float totalHeartPointsFloat = 0;
+                                int totalHeartPointsInt = 0;
+                                String totalStepTimeString = "";
+
+                                DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+                                DataSet dataSetHeartPoint = response.getDataSet(DataType.TYPE_HEART_POINTS);
+
+                                //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                                for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                    totalStepTimeNumber += dpStep.getEndTime(TimeUnit.MILLISECONDS) - dpStep.getStartTime(TimeUnit.MILLISECONDS);
+
+                                    for (Field field : dpStep.getDataType().getFields()) {
+                                        totalStep += dpStep.getValue(field).asInt();
+                                    }
+                                }
+
+                                //걸은 시간을 형식에 맞춰서 문자열에 저장
+                                if (totalStepTimeNumber > 0) {
+                                    totalStepTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber),
+                                            TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalStepTimeNumber)),
+                                            TimeUnit.MILLISECONDS.toSeconds(totalStepTimeNumber) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalStepTimeNumber)));
+                                }
+
+                                //총 심장 점수 측정
+                                for (DataPoint dpHea : dataSetHeartPoint.getDataPoints()) {
+                                    for (Field field : dpHea.getDataType().getFields()) {
+                                        totalHeartPointsFloat += dpHea.getValue(field).asFloat();
+                                    }
+                                }
+                                totalHeartPointsInt = (int) Math.floor(totalHeartPointsFloat);
+
+                                health_data_day[finalCount] = totalStep;
+                                health_data_day[finalCount + 7] = totalHeartPointsInt;
+                            }
+                        });
+            }
         }
     }
 
@@ -502,6 +636,62 @@ public class LoginActivity extends AppCompatActivity {
                             });
                 }
             }
+        }
+    }
+    private void readDataThreeWeeks() {
+        final Calendar cal = Calendar.getInstance();
+        Date now = Calendar.getInstance().getTime();
+        cal.setTime(now);
+        //월  화  수  목  금  토  일
+        //일 : 1, 월 : 2, 화 : 3, 수 : 4, 목 : 5, 금 : 6, 토 : 7
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        for(int i=0; i<42; i++)
+            stepsOf3weeks[i] = Integer.toString(i);
+        for (int count = 21; count > 0; count--) {
+            final Calendar cal2 = Calendar.getInstance();
+            Date now2 = Calendar.getInstance().getTime();
+            cal2.setTime(now2);
+            // 시작 시간
+            cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
+                    cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+            cal2.add(Calendar.DAY_OF_MONTH, -count);
+            long startTime = cal2.getTimeInMillis();
+
+            final Calendar cal3 = Calendar.getInstance();
+            Date now3 = Calendar.getInstance().getTime();
+            cal3.setTime(now3);
+            // 종료 시간
+            cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                    cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+            cal3.add(Calendar.DAY_OF_MONTH, -count);
+            long endTime = cal3.getTimeInMillis();
+            String mydate = sdf.format(cal3.getTime());
+            int finalCount = count;
+            Fitness.getHistoryClient(this,
+                            GoogleSignIn.getLastSignedInAccount(this))
+                    .readData(new DataReadRequest.Builder()
+                            .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                            .build())
+                    .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                        @Override
+                        public void onSuccess(DataReadResponse response) {
+                            int totalStep = 0;
+                            DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+
+                            //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                            for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                for (Field field : dpStep.getDataType().getFields()) {
+                                    totalStep += dpStep.getValue(field).asInt();
+                                }
+                            }
+                            stepsOf3weeks[(21- finalCount)*2] = mydate;
+                            stepsOf3weeks[(21- finalCount)*2+1] = Integer.toString(totalStep);
+                            //Log.w("날짜", mydate);
+                            //Log.w("걸음 수", Integer.toString(totalStep));
+                        }
+                    });
         }
     }
 }
