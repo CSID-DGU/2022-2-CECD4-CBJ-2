@@ -294,11 +294,9 @@ public class LoginActivity extends AppCompatActivity {
                                     Log.w(TAG, "Successfully subscribed!");
                                     readDataDay();
                                     readDataWeek();
-                                    readDataThreeWeeks();
-                                    /**
                                     if(!isAutomatic){
                                         readDataThreeWeeks();
-                                    }*/
+                                    }
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
