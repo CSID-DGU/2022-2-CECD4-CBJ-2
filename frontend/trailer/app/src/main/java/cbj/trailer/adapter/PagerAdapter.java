@@ -1,10 +1,12 @@
-package cbj.trailer;
-
+package cbj.trailer.adapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
+
+import cbj.trailer.fragdata.StepsPerDayFragment;
+import cbj.trailer.fragdata.StepsPerWeekFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     private int numOfTabs;
@@ -36,9 +38,9 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new TabFragment1(dayOfWeekData);
+                return new StepsPerDayFragment(dayOfWeekData);
             case 1:
-                return new TabFragment2(weeklyData);
+                return new StepsPerWeekFragment(weeklyData);
             default:
                 return null;
         }

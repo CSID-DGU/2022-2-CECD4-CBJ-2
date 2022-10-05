@@ -1,16 +1,14 @@
-package cbj.trailer;
+package cbj.trailer.fragdata;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -20,21 +18,20 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
-import com.google.firebase.firestore.util.Util;
 
 import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
-public class TabFragment2 extends Fragment {
+import cbj.trailer.R;
 
-    private static final int MAX_X_VALUE = 6;
-    private static final String[] WEEKS = { "1주차", "2주차", "3주차", "4주차", "5주차", "6주차"};
+public class StepsPerDayFragment extends Fragment {
+
+    private static final int MAX_X_VALUE = 7;
+    private static final String[] DAYS = { "월", "화", "수", "목", "굼", "토", "일" };
 
     private BarChart chart1;
     private BarChart chart2;
     private int[] data;
-    public TabFragment2(int [] data) {
+    public StepsPerDayFragment(int [] data) {
         // Required empty public constructor
         this.data = data;
     }
@@ -47,13 +44,13 @@ public class TabFragment2 extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_tab2, container, false);
+        View view = inflater.inflate(R.layout.fragment_tab1, container, false);
 
-        chart1 = view.findViewById(R.id.barchart3);
-        chart2 = view.findViewById(R.id.barchart4);
+        chart1 = view.findViewById(R.id.barchart1);
+        chart2 = view.findViewById(R.id.barchart2);
 
-        int [] step_count = new int[6];
-        int [] heart_score = new int[6];
+        int [] step_count = new int[7];
+        int [] heart_score = new int[7];
 
         for(int i=0; i<MAX_X_VALUE; i++){
             step_count[i] = data[i];
@@ -142,7 +139,7 @@ public class TabFragment2 extends Fragment {
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return WEEKS[(int) value];
+                return DAYS[(int) value];
             }
         });
 
@@ -163,7 +160,7 @@ public class TabFragment2 extends Fragment {
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return WEEKS[(int) value];
+                return DAYS[(int) value];
             }
         });
 
@@ -176,5 +173,3 @@ public class TabFragment2 extends Fragment {
         axisRight.setAxisMinimum(0);
     }
 }
-
-
