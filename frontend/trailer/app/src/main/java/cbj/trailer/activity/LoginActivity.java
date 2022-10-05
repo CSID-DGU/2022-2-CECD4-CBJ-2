@@ -296,10 +296,9 @@ public class LoginActivity extends AppCompatActivity {
                                     readDataWeek();
                                     readDataThreeWeeks();
                                     /**
-                                    if(isAutomatic){
+                                    if(!isAutomatic){
                                         readDataThreeWeeks();
-                                    }
-                                     */
+                                    }*/
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
