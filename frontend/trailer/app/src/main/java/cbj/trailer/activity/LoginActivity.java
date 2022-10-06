@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import cbj.trailer.R;
+import cbj.trailer.data.CodeResponse;
+import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
 import cbj.trailer.network.ServiceApi;
@@ -311,6 +313,27 @@ public class LoginActivity extends AppCompatActivity {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
+                                            service.initialData(new InitialDataRequest(stepsOf3weeks)).enqueue(new Callback<CodeResponse>() {
+
+                                                @Override
+                                                public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
+                                                    CodeResponse user = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                                                    if (user.getCode() == 200) {                            // 로그인 성공이라면
+                                                        Log.w("걸음수", "데이터 전송 성공");
+                                                    } else if (user.getCode() == 204)                       // 아이디가 존재하지 않을 경우
+                                                        Toast.makeText(LoginActivity.this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
+                                                    else                                                    // 비밀번호가 일치하지 않을 경우
+                                                        Toast.makeText(LoginActivity.this, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
+                                                    login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                                                }
+
+                                                @Override
+                                                public void onFailure(Call<CodeResponse> call, Throwable t) {
+                                                    Toast.makeText(LoginActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
+                                                    Log.e("통신 오류 발생", t.getMessage());
+                                                    login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
+                                                }
+                                            });
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
                                             finish();
                                         }

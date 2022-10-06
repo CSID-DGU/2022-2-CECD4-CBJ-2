@@ -1,5 +1,6 @@
 package cbj.trailer.network;
 
+import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.LoginRequest;
@@ -20,6 +21,8 @@ public interface ServiceApi {
     @POST("/join")                                              // 회원가입 API
     Call<CodeResponse> userJoin(@Body JoinRequest data);
 
+    @POST("/initial")
+    Call<CodeResponse> initialData(@Body InitialDataRequest data);
     /**
     @GET("/check/id")                                           // 아이디 중복검사 API
     Call<CodeResponse> userCheckID(@Query("UserId") String userId);
