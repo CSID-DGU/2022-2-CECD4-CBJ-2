@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -39,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +82,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);                        // xml, java 연결
 
         //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
+        preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
         /**
         if (preferences.getString("my_cookie", "") != ""){
             isAutomatic = true;
@@ -174,14 +177,7 @@ public class LoginActivity extends AppCompatActivity {
 
         login_progressbar.setVisibility(View.VISIBLE);                  // progressbar를 활성화 해주고\
 
-        /**
-        if(isAutomatic) {
-            startAutomaticLogin();
-        }
-        else {
-            //startLogin(new LoginRequest(id, pwd));                          // 로그인을 시작함
-        }
-         */
+        startLogin(new LoginRequest(id, pwd));                          // 로그인을 시작함
     }
 
     //처음 로그인 하는 경우
@@ -208,10 +204,12 @@ public class LoginActivity extends AppCompatActivity {
                     if(ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
                         requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION},0);
                     }
-                    
-                    //이전에 로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
+
+                    //로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
+                    Calendar cal = Calendar.getInstance();
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("my_cookie", response.headers().get("Set-Cookie"));
+                    editor.commit();
 
                     //구글 로그인
                     /**
@@ -311,12 +309,16 @@ public class LoginActivity extends AppCompatActivity {
                                     Log.w(TAG, "Successfully subscribed!");
                                     readDataDay();
                                     readDataWeek();
-                                    if(!isAutomatic){
+                                    if(isAutomatic){
+                                        readDataUntilLastLogin();
+                                    }
+                                    else{
                                         readDataThreeWeeks();
                                     }
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
+                                            /**
                                             for(int i=0; i<6; i++)
                                                 Log.w(Integer.toString(i), Integer.toString(health_data_week[i]));
                                             for(int i = 0; i<41; i+=2) {
@@ -324,7 +326,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 String st2 = "걸음 수" + Integer.toString(i);
                                                 Log.w(st1, stepsOf3weeks[i]);
                                                 Log.w(st2, stepsOf3weeks[i+1]);
-                                            }
+                                            }*/
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
@@ -349,6 +351,18 @@ public class LoginActivity extends AppCompatActivity {
                                                     login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
                                                 }
                                             });
+                                            Calendar cal = Calendar.getInstance();
+                                            SharedPreferences.Editor editor = preferences.edit();
+                                            //자동로그인인 경우
+                                            if(isAutomatic){
+                                                editor.putString("last_last_login_time", preferences.getString("last_login_time", ""));
+                                                editor.putString("last_login_time", cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH));
+                                            }
+                                            //첫로그인인 경우
+                                            else{
+                                                editor.putString("last_login_time", cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH));
+                                            }
+                                            editor.commit();
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
                                             finish();
                                         }
@@ -682,7 +696,7 @@ public class LoginActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         for(int i=0; i<42; i++)
-            stepsOf3weeks[i] = Integer.toString(i);
+            stepsOf3weeks[i] = "0";
         for (int count = 21; count > 0; count--) {
             final Calendar cal2 = Calendar.getInstance();
             Date now2 = Calendar.getInstance().getTime();
@@ -727,6 +741,84 @@ public class LoginActivity extends AppCompatActivity {
                             //Log.w("걸음 수", Integer.toString(totalStep));
                         }
                     });
+        }
+    }
+    private void readDataUntilLastLogin(){
+        //YYYY-MM-dd
+        String LastLogin = preferences.getString("last_login_time", "");
+        if(LastLogin == ""){
+            Log.w("Error", "이전 로그인 한 기록이 없어짐");
+        }
+        else{
+            //날짜 차이 구하기(가장 최근 로그인 한 날짜 ~ 지금 날짜)
+            Calendar baseCal = new GregorianCalendar(Integer.parseInt(LastLogin.substring(0,4)), Integer.parseInt(LastLogin.substring(5,7))-1, Integer.parseInt(LastLogin.substring(8)));
+            Calendar targetCal = new GregorianCalendar(Calendar.YEAR, Calendar.MONTH, Calendar.DAY_OF_MONTH);
+            long diffSec = (targetCal.getTimeInMillis() - baseCal.getTimeInMillis())/1000;
+            long diffDays = diffSec / (24*60*60);
+
+            //최근 3주간 접속이 한번도 없었던 경우
+            if(diffDays > 21)
+                diffDays = 21;
+
+            int diff = (int)diffDays;
+
+            final Calendar cal = Calendar.getInstance();
+            Date now = Calendar.getInstance().getTime();
+            cal.setTime(now);
+            //월  화  수  목  금  토  일
+            //일 : 1, 월 : 2, 화 : 3, 수 : 4, 목 : 5, 금 : 6, 토 : 7
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+            for(int i=0; i<42; i++)
+                stepsOf3weeks[i] = "0";
+            int index = 0;
+            for (int count = diff; count > 0; count--) {
+                final Calendar cal2 = Calendar.getInstance();
+                Date now2 = Calendar.getInstance().getTime();
+                cal2.setTime(now2);
+                // 시작 시간
+                cal2.set(cal2.get(Calendar.YEAR), cal2.get(Calendar.MONTH),
+                        cal2.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+                cal2.add(Calendar.DAY_OF_MONTH, -count);
+                long startTime = cal2.getTimeInMillis();
+
+                final Calendar cal3 = Calendar.getInstance();
+                Date now3 = Calendar.getInstance().getTime();
+                cal3.setTime(now3);
+                // 종료 시간
+                cal3.set(cal3.get(Calendar.YEAR), cal3.get(Calendar.MONTH),
+                        cal3.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                cal3.add(Calendar.DAY_OF_MONTH, -count);
+                long endTime = cal3.getTimeInMillis();
+                String mydate = sdf.format(cal3.getTime());
+
+                int finalIndex = index;
+                Fitness.getHistoryClient(this,
+                                GoogleSignIn.getLastSignedInAccount(this))
+                        .readData(new DataReadRequest.Builder()
+                                .read(DataType.TYPE_STEP_COUNT_DELTA) // Raw 걸음 수
+                                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                                .build())
+                        .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                            @Override
+                            public void onSuccess(DataReadResponse response) {
+                                int totalStep = 0;
+                                DataSet dataSetStepCount = response.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+
+                                //누적 걸음 수 및 걸은 시간 확인(금일 오전 6시~22시)
+                                for (DataPoint dpStep : dataSetStepCount.getDataPoints()) {
+                                    for (Field field : dpStep.getDataType().getFields()) {
+                                        totalStep += dpStep.getValue(field).asInt();
+                                    }
+                                }
+                                stepsOf3weeks[finalIndex] = mydate;
+                                stepsOf3weeks[finalIndex+1] = Integer.toString(totalStep);
+                                //Log.w("날짜", mydate);
+                                //Log.w("걸음 수", Integer.toString(totalStep));
+                            }
+                        });
+                index+=2;
+            }
         }
     }
 }
