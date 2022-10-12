@@ -172,11 +172,19 @@ public class LoginActivity extends AppCompatActivity {
         id = login_id.getText().toString();                             // id에 입력된 input을 넣어줌
         pwd = login_pwd.getText().toString();                           // password에 입력된 input을 넣어줌
 
-        login_progressbar.setVisibility(View.VISIBLE);                  // progressbar를 활성화 해주고
-        startAutomaticLogin();
-        //startLogin(new LoginRequest(id, pwd));                          // 로그인을 시작함
+        login_progressbar.setVisibility(View.VISIBLE);                  // progressbar를 활성화 해주고\
+
+        /**
+        if(isAutomatic) {
+            startAutomaticLogin();
+        }
+        else {
+            //startLogin(new LoginRequest(id, pwd));                          // 로그인을 시작함
+        }
+         */
     }
 
+    //처음 로그인 하는 경우
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void startLogin(LoginRequest data) {                        // 로그인을 하는 함수(이전에 설명했으므로 요약함)
         service.userLogin(data).enqueue(new Callback<LoginResponse>() {
@@ -204,8 +212,9 @@ public class LoginActivity extends AppCompatActivity {
                     //이전에 로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("my_cookie", response.headers().get("Set-Cookie"));
-                    
+
                     //구글 로그인
+                    /**
                     if(!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(LoginActivity.this), fitnessOptions)) {
                         GoogleSignIn.requestPermissions(
                                 LoginActivity.this,
@@ -215,7 +224,12 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         //기존에 로그인 된 이력이 있는 경우
                         subscribe();
-                    }
+                    }*/
+                    GoogleSignIn.requestPermissions(
+                            LoginActivity.this,
+                            REQUEST_OAUTH_REQUEST_CODE,
+                            GoogleSignIn.getLastSignedInAccount(LoginActivity.this),
+                            fitnessOptions);
                     finish();
                 } else if (user.getCode() == 204)                       // 아이디가 존재하지 않을 경우
                     Toast.makeText(LoginActivity.this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
@@ -233,6 +247,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    //자동로그인
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void startAutomaticLogin() {                        // 로그인을 하는 함수(이전에 설명했으므로 요약함)
         // 데이터를 읽어올 때 필요한 권한들 정의
