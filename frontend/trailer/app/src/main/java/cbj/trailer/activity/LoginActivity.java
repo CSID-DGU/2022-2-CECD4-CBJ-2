@@ -37,19 +37,16 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import cbj.trailer.R;
-import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
-import cbj.trailer.data.targetStepsOfDayResponse;
+import cbj.trailer.data.TargetStepsOfDayResponse;
 import cbj.trailer.network.ServiceApi;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -332,11 +329,11 @@ public class LoginActivity extends AppCompatActivity {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
-                                            service.initialData(new InitialDataRequest(stepsOf3weeks)).enqueue(new Callback<targetStepsOfDayResponse>() {
+                                            service.initialData(new InitialDataRequest(stepsOf3weeks)).enqueue(new Callback<TargetStepsOfDayResponse>() {
 
                                                 @Override
-                                                public void onResponse(Call<targetStepsOfDayResponse> call, Response<targetStepsOfDayResponse> response) {
-                                                    targetStepsOfDayResponse targetSteps = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                                                public void onResponse(Call<TargetStepsOfDayResponse> call, Response<TargetStepsOfDayResponse> response) {
+                                                    TargetStepsOfDayResponse targetSteps = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                                                     if (targetSteps.getCode() == 200) {                            // 서버와의 통신 성공
                                                         intent.putExtra("targetSteps", targetSteps.getTargetSteps());
                                                         Log.w("걸음수", "걸음 데이터 송신과 목표 걸음 수 수신 성공");
@@ -347,7 +344,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 }
 
                                                 @Override
-                                                public void onFailure(Call<targetStepsOfDayResponse> call, Throwable t) {
+                                                public void onFailure(Call<TargetStepsOfDayResponse> call, Throwable t) {
                                                     Toast.makeText(LoginActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
                                                     Log.e("통신 오류 발생", t.getMessage());
                                                     login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
@@ -772,7 +769,7 @@ public class LoginActivity extends AppCompatActivity {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
             for(int i=0; i<42; i++)
-                stepsOf3weeks[i] = "0";
+                stepsOf3weeks[i] = "-1";
             int index = 0;
             for (int count = diff; count > 0; count--) {
                 final Calendar cal2 = Calendar.getInstance();
