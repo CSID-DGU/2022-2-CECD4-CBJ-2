@@ -5,6 +5,7 @@ import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
+import cbj.trailer.data.targetStepsOfDayResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -22,7 +23,7 @@ public interface ServiceApi {
     Call<CodeResponse> userJoin(@Body JoinRequest data);
 
     @POST("/initial")
-    Call<CodeResponse> initialData(@Body InitialDataRequest data);
+    Call<targetStepsOfDayResponse> initialData(@Body InitialDataRequest data);
     /**
     @GET("/check/id")                                           // 아이디 중복검사 API
     Call<CodeResponse> userCheckID(@Query("UserId") String userId);

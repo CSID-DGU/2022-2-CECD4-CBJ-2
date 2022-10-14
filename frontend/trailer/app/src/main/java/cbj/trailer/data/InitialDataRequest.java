@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class InitialDataRequest {
     @SerializedName("stepsOf3weeks")
-    String[] stepsOf3weeks = new String[42];
+    private String[] stepsOf3weeks = new String[42];
 
     public InitialDataRequest(String[] stepsOf3weeks) {
         for (int i=0; i<42; i++){
