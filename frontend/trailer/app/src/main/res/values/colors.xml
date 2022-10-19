@@ -10,4 +10,6 @@
     <color name="gray">#FFBABABA</color>
     <color name="main">#FF2980B9</color>
     <color name="main2">#FF4090D0</color>
+    <color name="title">#ac9920</color>
+    <color name="title2">#50bcdf</color>
 </resources>
