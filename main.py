@@ -1,8 +1,20 @@
-from flask import Flask, request, make_response, jsonify
-from flask_restful import Api, Resource
+from typing import Union
+
+from fastapi import FastAPI, Request, Response
+from pydantic import BaseModel
+
 from process import getProphetResult
-app = Flask(__name__)
-api = Api(app)
+
+import uvicorn
+
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"data": "Hello World!"}
+
 
 # dummy data
 weeksteps = {
@@ -16,31 +28,77 @@ weeksteps = {
 }
 
 
-class StepManager(Resource):
-    def get(self, walk_date):
-        return make_response(jsonify(weeksteps[walk_date]), 200)
-
-    def post(self):
-        global weeksteps
-        data = request.json
-        date_steps_list = data['data']
-        process_result = getProphetResult(date_steps_list)
-        # for idx in range(len(date_steps_list)):
-        #     walk_date = date_steps_list[idx]['date']
-        #     walk_steps = date_steps_list[idx]['steps']
-        #     weeksteps[walk_date] = walk_steps
-        return make_response(jsonify(process_result), 200)
+class Steps(BaseModel):
+    targetSteps: list
 
 
-class Test(Resource):
-    def post(self):
-        data = request.json
-        return make_response(data, 200)
+def dictFromItems(items):
+    result = {}
+    for key, value in items:
+        result[key] = value
+    return result
 
 
-api.add_resource(Test, '/test')
-api.add_resource(StepManager, '/steps', '/steps/<string:walk_date>')
+# developing
+def getStepsLastNDays(amount):
+    if amount > len(weeksteps):
+        amount = len(weeksteps)
+    return {pair[0]: str(pair[1]) for pair in list(weeksteps.items())[-amount:]}
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=43210)
+def getStepsByDate(date):
+    # if no matched value : -1
+    return weeksteps.get(date, -1)
+
+
+def setStepsByDate(date, steps):
+    weeksteps[date] = int(steps)
+
+
+# 3주치 걸음 수
+
+
+@app.get("/steps/weeks")
+def read_steps_3weeks():
+    return getStepsLastNDays(21)
+
+
+@app.get("/steps/week")
+def read_step_week():
+    return getStepsLastNDays(7)
+
+
+@app.get("/steps/all")
+def print_steps():
+    print("steps/all")
+    return weeksteps
+
+
+@app.get("/steps/{date}")
+def read_steps(date):
+    return getStepsByDate(date)
+
+
+@app.post("/steps/day")
+async def save_steps_day(steps: Steps):
+    steps_list = steps.dict()["targetSteps"]
+
+    if steps_list:
+        setStepsByDate(steps_list[0], steps_list[1])
+    return f"{getStepsByDate(steps_list[0])} added to {steps_list[0]}"
+
+
+@app.post("/steps/days")
+async def save_steps_days(steps: Steps):
+
+    steps_list = steps.dict()["targetSteps"]
+    for i in range(0, len(steps_list), 2):
+        _date = steps_list[i]
+        _step = steps_list[i+1]
+        setStepsByDate(_date, _step)
+
+    return len(weeksteps)
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
