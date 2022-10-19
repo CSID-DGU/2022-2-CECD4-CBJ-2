@@ -1,5 +1,6 @@
 package cbj.trailer.network;
 
+import cbj.trailer.data.CheckIdRequest;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
@@ -10,6 +11,7 @@ import cbj.trailer.data.TargetStepsOfDayResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface ServiceApi {
     @POST("/login")                                             // 로그인 API
@@ -20,11 +22,8 @@ public interface ServiceApi {
 
     @POST("/initial")
     Call<TargetStepsOfDayResponse> initialData(@Body InitialDataRequest data);
-    /**
-    @GET("/check/id")                                           // 아이디 중복검사 API
-    Call<CodeResponse> userCheckID(@Query("UserId") String userId);
 
-    @GET("/check/name")                                         // 이름 중복검사 API
-    Call<CodeResponse> userCheckName(@Query("UserName") String userName);
-    */
+    @POST("/check/id")                                           // 아이디 중복검사 API
+    Call<CodeResponse> userCheckID(@Body CheckIdRequest data);
+
 }

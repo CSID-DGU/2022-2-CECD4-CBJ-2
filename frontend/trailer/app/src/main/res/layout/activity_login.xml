@@ -6,15 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".activity.LoginActivity">
 
-    <ImageView
-        android:layout_width="758dp"
-        android:layout_height="876dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteY="-73dp" />
-
 
     <ScrollView
         android:layout_width="match_parent"
@@ -35,9 +26,9 @@
                 android:layout_height="110dp"
                 android:autoSizeTextType="uniform"
                 android:gravity="center"
-                android:text="Trailer"
+                android:text="TRAILer"
                 android:textAlignment="center"
-                android:textColor="@color/black"
+                android:textColor="@color/title"
                 android:textStyle="bold" />
 
 
@@ -71,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="로그인"
-                android:textColor="#FF000000" />
+                android:textColor="@color/black" />
 
             <Button
                 android:id="@+id/join_btn"
@@ -80,6 +71,11 @@
                 android:layout_marginTop="16dp"
                 android:text="회원가입"
                 android:textColor="#FF000000" />
+
+            <ImageView
+                android:layout_width="758dp"
+                android:layout_height="876dp"
+                tools:ignore="MissingConstraints" />
 
         </LinearLayout>
     </ScrollView>

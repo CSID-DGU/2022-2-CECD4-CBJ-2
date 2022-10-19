@@ -11,16 +11,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -54,6 +62,7 @@ import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private TextView title;
     private EditText login_id;
     private EditText login_pwd;
     private Button login_btn;
@@ -79,6 +88,15 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
+
+        title = (TextView)findViewById(R.id.login_main);
+        String titleMessage = title.getText().toString();
+        SpannableString spannableString = new SpannableString(titleMessage);
+
+        spannableString.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.main2)), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new RelativeSizeSpan(1.3f), 0, 5, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        title.setText(spannableString);
 
         //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -164,7 +182,8 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), JoinActivity.class);
-                startActivity(intent);                                  // 회원가입 액티비티로 넘어감
+                startActivity(intent);
+                finish();// 회원가입 액티비티로 넘어감
             }
         });
     }
