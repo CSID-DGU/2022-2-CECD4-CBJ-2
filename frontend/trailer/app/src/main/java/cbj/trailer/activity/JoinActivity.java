@@ -39,7 +39,8 @@ public class JoinActivity extends AppCompatActivity {
 
     private TextView title;
     private EditText join_id;
-    private EditText join_pwd;
+    private EditText join_pwd1;
+    private EditText join_pwd2;
     private EditText join_nickname;
     private EditText join_age;
     private Spinner join_sex;
@@ -65,7 +66,7 @@ public class JoinActivity extends AppCompatActivity {
     private String category;
     private String exerciseIntensity;
     private boolean input_id;
-    private boolean input_pwd;
+    private boolean input_pwd1;
     private boolean input_nickname;
     private boolean input_age;
     private boolean input_sex;
@@ -91,7 +92,8 @@ public class JoinActivity extends AppCompatActivity {
         //service = RetrofitClient.getClient().create(ServiceApi.class);  // 통신을 위한 ServiceApi 생성
 
         join_id = findViewById(R.id.join_id);
-        join_pwd = findViewById(R.id.join_pwd);
+        join_pwd1 = findViewById(R.id.join_pwd1);
+        join_pwd2 = findViewById(R.id.join_pwd2);
         join_nickname = findViewById(R.id.join_nickname);
         join_age = findViewById(R.id.join_age);
         join_sex = findViewById(R.id.join_sex);
@@ -111,7 +113,7 @@ public class JoinActivity extends AppCompatActivity {
         join_progressbar = findViewById(R.id.join_pbar);                // xml의 컴포넌트와 각각 연결
 
         input_id = false;
-        input_pwd = false;
+        input_pwd1 = false;
         input_nickname = false;
         input_age = false;
         input_sex = false;
@@ -120,7 +122,7 @@ public class JoinActivity extends AppCompatActivity {
         input_exerciseIntensity = false;
 
 
-        //id 4자리 이상인지 확인
+        //id 입력이 변경되었는지 확인 후 다시 아이디 검사 하도록 boolean 변수 설정
         join_id.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -157,7 +159,7 @@ public class JoinActivity extends AppCompatActivity {
         });
 
         //pwd 8자리 이상인지 확인
-        join_pwd.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
+        join_pwd1.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -166,11 +168,11 @@ public class JoinActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String cor_pwd = s.toString();
                 if (cor_pwd.length() > 7) {
-                    input_pwd = true;
+                    input_pwd1 = true;
                     pwd = cor_pwd;
                 }
                 else
-                    input_pwd = false;
+                    input_pwd1 = false;
             }                                                           // 아이디가 4글자 이상일 때 버튼 활성화
 
             @Override
@@ -330,7 +332,7 @@ public class JoinActivity extends AppCompatActivity {
         join_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(input_id && input_pwd && input_nickname && input_age && input_sex && input_homeAddress && input_companyAddress && input_exerciseIntensity){
+                if(input_id && input_pwd1 && input_nickname && input_age && input_sex && input_homeAddress && input_companyAddress && input_exerciseIntensity){
                     if(join_movieTheater.isChecked()){
                         category+="영화관,";
                     }
@@ -351,11 +353,23 @@ public class JoinActivity extends AppCompatActivity {
                     }
                     if(!category.equals(""))
                         category = category.substring(0,category.length()-1);
+                    if(join_pwd1.getText().toString() != null && !join_pwd1.getText().toString().equals("") && join_pwd2.getText().toString() != null && !join_pwd2.getText().toString().equals("")) {
+                        if (join_pwd1.getText().toString().equals(join_pwd2.getText().toString())) {
+                            join_progressbar.setVisibility(View.VISIBLE);   // progressbar를 활성화 해주고
+                            startJoin(new JoinRequest(id, pwd, nickname, age, sex, homeAddress, companyAddress, category, exerciseIntensity));      // 회원가입통신 시작
+                        }
+                        else {
+                            Toast.makeText(JoinActivity.this, "동일한 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else{
+                        Toast.makeText(JoinActivity.this, "8자리 이상의 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 else{
                     if(!input_id)
                         Toast.makeText(JoinActivity.this, "아이디 검사를 진행해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
-                    else if(!input_pwd)
+                    else if(!input_pwd1)
                         Toast.makeText(JoinActivity.this, "8자리 이상의 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
                     else if(!input_nickname)
                         Toast.makeText(JoinActivity.this, "닉네임 검사를 진행해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
@@ -370,8 +384,6 @@ public class JoinActivity extends AppCompatActivity {
                     else
                         Toast.makeText(JoinActivity.this, "본인이 원하는 운동강도를 선택해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
                 }
-                join_progressbar.setVisibility(View.VISIBLE);   // progressbar를 활성화 해주고
-                startJoin(new JoinRequest(id, pwd, nickname, age, sex, homeAddress, companyAddress, category, exerciseIntensity));      // 회원가입통신 시작
             }
         });
     }
