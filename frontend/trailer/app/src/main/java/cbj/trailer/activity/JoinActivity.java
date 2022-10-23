@@ -142,7 +142,11 @@ public class JoinActivity extends AppCompatActivity {
         check_id.setOnClickListener(new View.OnClickListener() {        // 버튼을 클릭 했을 때 모션을 정의
             @Override
             public void onClick(View v) {
-                if(!(join_id.getText().toString().length() > 3)){
+                if(join_id.getText().toString() == null || join_id.getText().toString().equals("")) {
+                    Toast.makeText(JoinActivity.this, "아이디를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!(join_id.getText().toString().length() > 3)) {
                     Toast.makeText(JoinActivity.this, "아이디는 4글자 이상이어야 합니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -199,7 +203,7 @@ public class JoinActivity extends AppCompatActivity {
         });
 
         //나이 숫자를 제대로 입력했는지 확인
-        join_age.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
+        join_age.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -207,7 +211,7 @@ public class JoinActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-            }                                                           // 아이디가 4글자 이상일 때 버튼 활성화
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
