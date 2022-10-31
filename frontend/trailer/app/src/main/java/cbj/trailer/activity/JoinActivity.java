@@ -63,7 +63,7 @@ public class JoinActivity extends AppCompatActivity {
     private String sex;
     private String homeAddress;
     private String companyAddress;
-    private String category;
+    private String category = "";
     private String exerciseIntensity;
     private boolean input_id;
     private boolean input_pwd1;
