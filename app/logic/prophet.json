@@ -1,0 +1,11 @@
+﻿{
+  "prophet" : {
+    "min_steps": 1000,
+    "max_steps": 15000,
+    "period": 7,
+    "round_by": 500,
+    "interval_width": 0.7,
+    "normalize_min": 2000,
+    "normalize_max": 10000
+  }
+}

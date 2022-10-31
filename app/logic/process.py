@@ -1,14 +1,22 @@
 import csv
 from enum import Enum
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from pytz import timezone
 from prophet import Prophet
 from datetime import datetime, timedelta, date
 
+import os
+import json
+
 dayAndStepsDict = {}
 week = {0: '월요일', 1: '화요일', 2: '수요일', 3: '목요일', 4: '금요일', 5: '토요일', 6: '일요일'}
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_DIR, "prophet.json")
+_configs = json.loads(open(CONFIG_FILE, "r", encoding="utf-8-sig").read())
+
+PROPHET_CONFIG = _configs["prophet"]
 
 
 # filename = 'date-steps-220624-220924.csv'
@@ -17,14 +25,15 @@ week = {0: '월요일', 1: '화요일', 2: '수요일', 3: '목요일', 4: '금�
 # rdr = csv.reader(f)
 # next(rdr)  # 첫 줄 건너뛰기
 
-period = 7  # forecast future 28 days (4 weeks)
-min_steps = 1000
-max_steps = 15000
-
-step_lowerbound = 2000
-step_upperbound = 10000
+period = PROPHET_CONFIG['period']  # forecast future 7 days
 
 # 너무 적거나 너무 큰 데이터 자르기
+interval_width = PROPHET_CONFIG['interval_width']
+min_steps = PROPHET_CONFIG['min_steps']
+max_steps = PROPHET_CONFIG['max_steps']
+round_by = PROPHET_CONFIG['round_by']
+normalize_min = PROPHET_CONFIG['normalize_min']
+normalize_max = PROPHET_CONFIG['normalize_max']
 
 
 def removeOutOf(steps, min, max):
@@ -82,23 +91,19 @@ def normalize(value, lower, upper):
 # dummuy data
 dummy_weight = Intensity.HIGH
 # week_score[day] = weight
-dummy_score = [3, 3, 3, 3, 3, 3, 3]
-
-today = datetime.now(timezone('Asia/Seoul'))
+# dummy_score = [3, 3, 3, 3, 3, 3, 3]
 
 
 def getDateStrFrom(line):
     # return line[0].replace(".", "-")s
-    return line['date']
+    return line[0]
 
 
 def getStepsFrom(line):
-    return int(line['steps'])
+    return int(line[1])
 
 
-# In[160]:
-
-def getProphetResult(date_step_list):
+def applyProphet(date_step_list, walk_score):
     for line in date_step_list:
         steps = getStepsFrom(line)
         # steps = 5000
@@ -108,26 +113,15 @@ def getProphetResult(date_step_list):
         steps = removeOutOf(steps, min_steps, max_steps)
 
         # 500 단위로 반올림
-        steps = roundBy(steps, 500)
+        steps = roundBy(steps, round_by)
 
         # 2000~10000 사이로 정규화
-        steps = normalize(steps, 2000, 10000)
+        steps = normalize(steps, normalize_min, normalize_max)
 
         # 운동 강도 상,중,하 반영
         steps = applyIntensity(steps, Intensity.HIGH)
         # 특정 일의 걸음 예측 점수 반영하기 (index 0: 월요일)
-        steps = applyScore(steps, dummy_score[0])
 
-        dateobj = datetime.strptime(dateStr, '%Y-%m-%d')
-
-        # 220924 기준임
-        today_date = datetime.strptime('2022-09-24', '%Y-%m-%d')
-        # 3주 전
-        standard_date = today_date - timedelta(weeks=3)
-        # 학습 범위는 과거 3주
-        if dateobj < standard_date:
-            continue
-        print(dateStr + ": " + str(steps))
         dayAndStepsDict[dateStr] = steps
 
     dayAndStepsList = sorted(dayAndStepsDict.items(
@@ -135,23 +129,57 @@ def getProphetResult(date_step_list):
 
     df = pd.DataFrame(dayAndStepsList, columns=['ds', 'y'])
 
-    # 상한 하한
-    # print(df.tail(14))
-    # f.close()
-
-    m = Prophet(interval_width=0.6)
+    m = Prophet(interval_width=interval_width)
 
     m.fit(df)
     future = m.make_future_dataframe(periods=period)
 
     forecast = m.predict(future)
 
-    ds_list = [val for sublist in forecast[['ds']].values for val in sublist]
-    yhat_list = list(
-        map(round, [val for sublist in forecast[['yhat']].values for val in sublist]))
-    yhat_lower_list = list(map(
-        round, [val for sublist in forecast[['yhat_lower']].values for val in sublist]))
-    yhat_upper_list = list(map(
-        round, [val for sublist in forecast[['yhat_upper']].values for val in sublist]))
+    # 여기부터 다시
+    res = {
+        "mid": [],
+        "low": [],
+        "high": []
+    }
+    # print([val for sublist in forecast.values for val in sublist])
 
-    return yhat_list
+    ds_list = [val for sublist in forecast[[
+        'ds']].values for val in sublist][-8:]
+    yhat_list = list(
+        map(round, [val for sublist in forecast[['yhat']].values for val in sublist]))[-8:]
+    yhat_lower_list = list(map(
+        round, [val for sublist in forecast[['yhat_lower']].values for val in sublist]))[-8:]
+    yhat_upper_list = list(map(
+        round, [val for sublist in forecast[['yhat_upper']].values for val in sublist]))[-8:]
+
+    for idx, key in enumerate(ds_list):
+        key = str(key)[:10]
+        res["mid"].append({
+            "date": key,
+            "steps": yhat_list[idx],
+            "dayOfWeek": datetime.strptime(
+                key, '%Y-%m-%d').strftime('%a').lower()
+        })
+        res["low"].append({"date": key,
+                           "steps": yhat_lower_list[idx],
+                           "dayOfWeek": datetime.strptime(
+                               key, '%Y-%m-%d').strftime('%a').lower()})
+
+        res["high"].append({"date": key,
+                            "steps": yhat_upper_list[idx],
+                            "dayOfWeek": datetime.strptime(
+                                key, '%Y-%m-%d').strftime('%a').lower()})
+
+    for obj in res["mid"]:
+        obj["steps"] = round(applyScore(
+            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+
+    for obj in res["high"]:
+        obj["steps"] = round(applyScore(
+            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+
+    for obj in res["low"]:
+        obj["steps"] = round(applyScore(
+            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+    return res
