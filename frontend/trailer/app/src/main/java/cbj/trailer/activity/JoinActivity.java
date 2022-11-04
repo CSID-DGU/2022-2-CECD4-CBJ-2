@@ -89,7 +89,7 @@ public class JoinActivity extends AppCompatActivity {
         spannableString.setSpan(new RelativeSizeSpan(1.3f), 0, 5, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         title.setText(spannableString);
 
-        //service = RetrofitClient.getClient().create(ServiceApi.class);  // 통신을 위한 ServiceApi 생성
+        service = RetrofitClient.getClient().create(ServiceApi.class);  // 통신을 위한 ServiceApi 생성
 
         join_id = findViewById(R.id.join_id);
         join_pwd1 = findViewById(R.id.join_pwd1);
