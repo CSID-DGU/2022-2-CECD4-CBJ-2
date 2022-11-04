@@ -17,14 +17,6 @@ CONFIG_FILE = os.path.join(BASE_DIR, "prophet.json")
 _configs = json.loads(open(CONFIG_FILE, "r", encoding="utf-8-sig").read())
 
 PROPHET_CONFIG = _configs["prophet"]
-
-
-# filename = 'date-steps-220624-220924.csv'
-# filename_ = 'simple_activity_person5.csv'
-# f = open(filename, 'r', encoding='utf-8')
-# rdr = csv.reader(f)
-# next(rdr)  # 첫 줄 건너뛰기
-
 period = PROPHET_CONFIG['period']  # forecast future 7 days
 
 # 너무 적거나 너무 큰 데이터 자르기
@@ -106,7 +98,6 @@ def getStepsFrom(line):
 def applyProphet(date_step_list, walk_score):
     for line in date_step_list:
         steps = getStepsFrom(line)
-        # steps = 5000
         dateStr = getDateStrFrom(line)
 
         # 1000~15000 밖의 데이터 제거
@@ -120,7 +111,6 @@ def applyProphet(date_step_list, walk_score):
 
         # 운동 강도 상,중,하 반영
         steps = applyIntensity(steps, Intensity.HIGH)
-        # 특정 일의 걸음 예측 점수 반영하기 (index 0: 월요일)
 
         dayAndStepsDict[dateStr] = steps
 
@@ -145,13 +135,13 @@ def applyProphet(date_step_list, walk_score):
     # print([val for sublist in forecast.values for val in sublist])
 
     ds_list = [val for sublist in forecast[[
-        'ds']].values for val in sublist][-8:]
+        'ds']].values for val in sublist][(-1*period):]
     yhat_list = list(
-        map(round, [val for sublist in forecast[['yhat']].values for val in sublist]))[-8:]
+        map(round, [val for sublist in forecast[['yhat']].values for val in sublist]))[(-1*period):]
     yhat_lower_list = list(map(
-        round, [val for sublist in forecast[['yhat_lower']].values for val in sublist]))[-8:]
+        round, [val for sublist in forecast[['yhat_lower']].values for val in sublist]))[(-1*period):]
     yhat_upper_list = list(map(
-        round, [val for sublist in forecast[['yhat_upper']].values for val in sublist]))[-8:]
+        round, [val for sublist in forecast[['yhat_upper']].values for val in sublist]))[(-1*period):]
 
     for idx, key in enumerate(ds_list):
         key = str(key)[:10]
