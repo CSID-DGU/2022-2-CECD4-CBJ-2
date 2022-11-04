@@ -100,12 +100,12 @@ public class LoginActivity extends AppCompatActivity {
 
         //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
-        /**
+
         if (preferences.getString("my_cookie", "") != ""){
             isAutomatic = true;
             startAutomaticLogin();
         }
-         **/
+
         login_id = findViewById(R.id.login_id);
         login_pwd = findViewById(R.id.login_pwd);
 
