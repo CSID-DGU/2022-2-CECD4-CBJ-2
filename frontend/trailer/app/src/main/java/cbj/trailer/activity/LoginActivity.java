@@ -51,6 +51,7 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 import cbj.trailer.R;
+import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
@@ -207,6 +208,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse user = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                 if (user.getCode() == 200) {                            // 로그인 성공이라면
+
                     //로그인 이력 있는 경우 바로 Main
                     //로그인 이력 없는 경우 권한 요청 후 데이터 받아서 넘김
                     // 데이터를 읽어올 때 필요한 권한들 정의
@@ -227,6 +229,8 @@ public class LoginActivity extends AppCompatActivity {
                     Calendar cal = Calendar.getInstance();
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("my_cookie", response.headers().get("Set-Cookie"));
+                    editor.putString("userId", user.getUserId());
+                    editor.putString("userNickname", user.getUserNickname());
                     editor.commit();
 
                     //구글 로그인
@@ -348,13 +352,13 @@ public class LoginActivity extends AppCompatActivity {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
-                                            service.initialData(new InitialDataRequest(stepsOf3weeks)).enqueue(new Callback<TargetStepsOfDayResponse>() {
+                                            service.initialData(new InitialDataRequest(preferences.getString("userId", ""), stepsOf3weeks)).enqueue(new Callback<CodeResponse>() {
 
                                                 @Override
-                                                public void onResponse(Call<TargetStepsOfDayResponse> call, Response<TargetStepsOfDayResponse> response) {
-                                                    TargetStepsOfDayResponse targetSteps = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
-                                                    if (targetSteps.getCode() == 200) {                            // 서버와의 통신 성공
-                                                        intent.putExtra("targetSteps", targetSteps.getTargetSteps());
+                                                public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
+                                                    CodeResponse code = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                                                    if (code.getCode() == 200) {                            // 서버와의 통신 성공
+                                                        //intent.putExtra("targetSteps", targetSteps.getTargetSteps());
                                                         Log.w("걸음수", "걸음 데이터 송신과 목표 걸음 수 수신 성공");
                                                     }
                                                     else                                                    // 서버와의 통신 오류
@@ -363,7 +367,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 }
 
                                                 @Override
-                                                public void onFailure(Call<TargetStepsOfDayResponse> call, Throwable t) {
+                                                public void onFailure(Call<CodeResponse> call, Throwable t) {
                                                     Toast.makeText(LoginActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
                                                     Log.e("통신 오류 발생", t.getMessage());
                                                     login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
