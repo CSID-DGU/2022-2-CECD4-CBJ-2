@@ -41,8 +41,7 @@ class WalkCount(Base):
         return self.walk_date.strftime("%Y-%m-%d")
 
 
-class WalkCountBase(BaseModel):
-    person_id: str
+class WalkCountBase(UserId):
     walk_date: datetime
     steps: int
     dist_value: int
@@ -72,7 +71,8 @@ class WalkScore(Base):
         return dayOfListDict[day]
 
 
-class WalkScoreBase(BaseModel):
+class WalkScoreBase(UserId):
+  
     mon: int = 3
     tue: int = 3
     wed: int = 3
