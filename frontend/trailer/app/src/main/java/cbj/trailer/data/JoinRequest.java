@@ -2,31 +2,31 @@ package cbj.trailer.data;
 
 import com.google.gson.annotations.SerializedName;
 public class JoinRequest {
-    @SerializedName("UserId")
+    @SerializedName("person_id")
     private String userId;
 
     @SerializedName("UserPwd")
     private String userPwd;
 
-    @SerializedName("UserNickName")
+    @SerializedName("nickname")
     private String userNickName;
 
-    @SerializedName("UserAge")
+    @SerializedName("age")
     private int userAge;
 
-    @SerializedName("UserSex")
+    @SerializedName("gender")
     private String userSex;
 
-    @SerializedName("UserHomeAddress")
+    @SerializedName("home_address")
     private String userHomeAddress;
 
-    @SerializedName("UserCompanyAddress")
+    @SerializedName("comp_address")
     private String userCompanyAddress;
 
-    @SerializedName("UserCategory")
+    @SerializedName("category")
     private String userCategory;
 
-    @SerializedName("UserExerciseIntensity")
+    @SerializedName("strength")
     private String userExerciseIntensity;
 
     public JoinRequest(String userId, String userPwd, String userNickName, int userAge, String userSex, String userHomeAddress, String userCompanyAddress, String userCategory, String userExerciseIntensity) {

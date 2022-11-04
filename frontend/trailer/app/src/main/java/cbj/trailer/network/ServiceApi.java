@@ -20,8 +20,8 @@ public interface ServiceApi {
     @POST("/join")                                              // 회원가입 API
     Call<CodeResponse> userJoin(@Body JoinRequest data);
 
-    @POST("/initial")
-    Call<TargetStepsOfDayResponse> initialData(@Body InitialDataRequest data);
+    @POST("/initialData")
+    Call<CodeResponse> initialData(@Body InitialDataRequest data);
 
     @POST("/check/id")                                           // 아이디 중복검사 API
     Call<CodeResponse> userCheckID(@Body CheckIdRequest data);

@@ -248,7 +248,10 @@ public class JoinActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if(i!=0) {
                     input_sex = true;
-                    sex = sex_type[i];
+                    if(i==1)
+                        sex = "M";
+                    else
+                        sex = "F";
                 }
                 else{
                     input_sex = false;

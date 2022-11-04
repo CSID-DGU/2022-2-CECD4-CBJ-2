@@ -3,7 +3,7 @@ package cbj.trailer.data;
 import com.google.gson.annotations.SerializedName;
 
 public class CheckIdRequest {
-    @SerializedName("UserId")
+    @SerializedName("person_id")
     private String userId;
 
     public CheckIdRequest(String userId) {
