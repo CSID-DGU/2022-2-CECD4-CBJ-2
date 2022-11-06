@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class CodeResponse {
     @SerializedName("ResultCode")
-    private int resultCode;
+    private int ResultCode;
 
     public int getCode() {
-        return resultCode;
+        return ResultCode;
     }
 }

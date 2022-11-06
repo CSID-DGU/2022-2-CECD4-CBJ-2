@@ -4,19 +4,19 @@ import com.google.gson.annotations.SerializedName;
 
 public class LoginResponse {
     @SerializedName("person_id")
-    private String userId;
+    private String person_id;
 
     @SerializedName("nickname")
-    private String userNickname;
+    private String nickname;
 
     @SerializedName("ResultCode")
-    private int resultCode;
+    private int ResultCode;
 
     public String getUserId() {
-        return userId;
+        return person_id;
     }
-    public String getUserNickname() { return userNickname; }
+    public String getUserNickname() { return nickname; }
     public int getCode() {
-        return resultCode;
+        return ResultCode;
     }
 }

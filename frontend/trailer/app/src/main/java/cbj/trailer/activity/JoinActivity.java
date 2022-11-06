@@ -424,8 +424,10 @@ public class JoinActivity extends AppCompatActivity {
             public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
                 CodeResponse code = response.body();
                 join_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
-
-                if (code.getCode() == 200) {                            // 중복이 없다면
+                if(code == null){
+                    Log.w("에러 : ", "코드가 널");
+                }
+                else if (code.getCode() == 200) {                            // 중복이 없다면
                     Toast.makeText(JoinActivity.this, "사용 가능한 아이디입니다.", Toast.LENGTH_SHORT).show();
                     input_id = true;
                     id = checkId;

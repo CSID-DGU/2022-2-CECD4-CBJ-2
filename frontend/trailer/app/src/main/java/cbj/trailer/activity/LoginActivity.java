@@ -56,6 +56,7 @@ import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
 import cbj.trailer.data.TargetStepsOfDayResponse;
+import cbj.trailer.network.RetrofitClient;
 import cbj.trailer.network.ServiceApi;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -90,6 +91,8 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
 
+        service = RetrofitClient.getClient().create(ServiceApi.class);
+
         title = (TextView)findViewById(R.id.login_main);
         String titleMessage = title.getText().toString();
         SpannableString spannableString = new SpannableString(titleMessage);
@@ -102,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
         //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
 
-        if (preferences.getString("my_cookie", "") != ""){
+        if (preferences.getString("userId", "") != ""){
             isAutomatic = true;
             startAutomaticLogin();
         }
@@ -176,6 +179,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tryLogin();
+                login_progressbar.setVisibility(View.VISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
             }                 // 로그인을 시도함
         });
 
@@ -228,7 +232,6 @@ public class LoginActivity extends AppCompatActivity {
                     //로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
                     Calendar cal = Calendar.getInstance();
                     SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("my_cookie", response.headers().get("Set-Cookie"));
                     editor.putString("userId", user.getUserId());
                     editor.putString("userNickname", user.getUserNickname());
                     editor.commit();
@@ -250,12 +253,14 @@ public class LoginActivity extends AppCompatActivity {
                             REQUEST_OAUTH_REQUEST_CODE,
                             GoogleSignIn.getLastSignedInAccount(LoginActivity.this),
                             fitnessOptions);
-                    finish();
-                } else if (user.getCode() == 204)                       // 아이디가 존재하지 않을 경우
+                } else if (user.getCode() == 204) {                   // 아이디가 존재하지 않을 경우
                     Toast.makeText(LoginActivity.this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
-                else                                                    // 비밀번호가 일치하지 않을 경우
+                    login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                }
+                else {                                                  // 비밀번호가 일치하지 않을 경우
                     Toast.makeText(LoginActivity.this, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
-                login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                    login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                }
             }
 
             @Override
@@ -385,6 +390,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 editor.putString("last_login_time", cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH));
                                             }
                                             editor.commit();
+                                            login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
                                             finish();
                                         }
