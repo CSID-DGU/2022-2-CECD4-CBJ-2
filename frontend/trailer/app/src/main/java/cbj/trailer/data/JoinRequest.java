@@ -5,7 +5,7 @@ public class JoinRequest {
     @SerializedName("person_id")
     private String userId;
 
-    @SerializedName("UserPwd")
+    @SerializedName("password")
     private String userPwd;
 
     @SerializedName("nickname")
