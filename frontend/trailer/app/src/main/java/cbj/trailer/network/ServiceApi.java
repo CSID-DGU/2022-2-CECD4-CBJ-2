@@ -6,6 +6,8 @@ import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
+import cbj.trailer.data.LookUpRequest;
+import cbj.trailer.data.LookUpResponse;
 import cbj.trailer.data.TargetStepsOfDayResponse;
 
 import retrofit2.Call;
@@ -30,5 +32,9 @@ public interface ServiceApi {
     @Headers({"Content-Type: application/json"})
     @POST("/check/id")                                           // 아이디 중복검사 API
     Call<CodeResponse> userCheckID(@Body CheckIdRequest data);
+
+    @Headers({"Content-Type: application/json"})
+    @POST("/rank")                                           // 랭크 조회 API
+    Call<LookUpResponse> userRank(@Body LookUpRequest data);
 
 }
