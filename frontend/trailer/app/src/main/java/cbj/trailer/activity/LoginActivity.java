@@ -81,7 +81,6 @@ public class LoginActivity extends AppCompatActivity {
     private final String TAG = "BasicHistoryAPI";
     private int [] health_data_day;
     private int [] health_data_week;
-    private int [] targetStepsofDay;
     String[] stepsOf3weeks = new String[42];
 
 
@@ -320,11 +319,11 @@ public class LoginActivity extends AppCompatActivity {
     public synchronized void subscribe(){
         health_data_day = new int[14];
         for(int i=0; i<14; i++){
-            health_data_day[i] = 0;
+            health_data_day[i] = -1;
         }
         health_data_week = new int[12];
         for(int i=0; i<12; i++){
-            health_data_week[i] = 0;
+            health_data_week[i] = -1;
         }
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
@@ -389,6 +388,15 @@ public class LoginActivity extends AppCompatActivity {
                                             else{
                                                 editor.putString("last_login_time", cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH));
                                             }
+                                            int count = 0;
+                                            int temp = 0;
+                                            while(count < 7){
+                                                if(health_data_day[count] == -1){
+                                                    break;
+                                                }
+                                                count+=1;
+                                            }
+                                            editor.putString("userStep", String.valueOf(health_data_day[count-1]));
                                             editor.commit();
                                             login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
