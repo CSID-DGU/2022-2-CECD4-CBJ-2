@@ -2,19 +2,18 @@ package cbj.trailer.network;
 
 import cbj.trailer.data.CheckIdRequest;
 import cbj.trailer.data.InitialDataRequest;
+import cbj.trailer.data.InitialLookUpRequest;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
 import cbj.trailer.data.LookUpRequest;
-import cbj.trailer.data.LookUpResponse;
-import cbj.trailer.data.TargetStepsOfDayResponse;
 
+import cbj.trailer.data.RankListResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
-import retrofit2.http.Query;
 
 public interface ServiceApi {
     @Headers({"Content-Type: application/json"})
@@ -34,7 +33,11 @@ public interface ServiceApi {
     Call<CodeResponse> userCheckID(@Body CheckIdRequest data);
 
     @Headers({"Content-Type: application/json"})
-    @POST("/rank")                                           // 랭크 조회 API
-    Call<LookUpResponse> userRank(@Body LookUpRequest data);
+    @POST("/initialrank")                                           // 랭크 조회 API
+    Call<RankListResponse> defaultRank(@Body InitialLookUpRequest data);
+
+    @Headers({"Content-Type: application/json"})
+    @POST("/rank")                                           // 그룹화된 랭크 조회 API
+    Call<RankListResponse> userRank(@Body LookUpRequest data);
 
 }
