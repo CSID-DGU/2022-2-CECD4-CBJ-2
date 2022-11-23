@@ -26,6 +26,7 @@ import java.util.List;
 
 import cbj.trailer.R;
 import cbj.trailer.data.InitialLookUpRequest;
+import cbj.trailer.data.InitialRankListResponse;
 import cbj.trailer.data.LookUpRequest;
 import cbj.trailer.data.RankData;
 import cbj.trailer.data.RankListResponse;
@@ -82,15 +83,11 @@ public class RankActivity  extends AppCompatActivity {
 
         userId = preferences.getString("userId", "");
         userNickname = preferences.getString("userNickname", "");
-        userRank = preferences.getString("userRank", "미정");
-        userGroupRank = preferences.getString("userGroupRank", "미정");
         userStep = preferences.getString("userStep", "");
         last_last_login_time = preferences.getString("last_last_login_time", "");
         last_login_time = preferences.getString("last_login_time", "");
 
         user_nickname.setText(userNickname);
-        user_rank.setText(userRank);
-        user_groupRank.setText(userGroupRank);
         user_walk.setText(userStep);
 
         //성별 선택
@@ -185,6 +182,10 @@ public class RankActivity  extends AppCompatActivity {
             //기존에 저장해놓은 랭킹 정보 받아오는 함수 호출
             makeDefaultRank();
         }
+        userRank = preferences.getString("userRank", "미정");
+        userGroupRank = preferences.getString("userGroupRank", "미정");
+        user_rank.setText(userRank);
+        user_groupRank.setText(userGroupRank);
     }
 
     public boolean isNewWeek(){
@@ -359,10 +360,10 @@ public class RankActivity  extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                service.defaultRank(data).enqueue(new Callback<RankListResponse>() {
+                service.defaultRank(data).enqueue(new Callback<InitialRankListResponse>() {
                     @Override
-                    public void onResponse(Call < RankListResponse > call, Response < RankListResponse > response){
-                        RankListResponse code = response.body();                    // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                    public void onResponse(Call < InitialRankListResponse > call, Response < InitialRankListResponse > response){
+                        InitialRankListResponse code = response.body();                    // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                         rank_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
                         if (code.getCode() == 200) {                            // 랭크 조회
                             //표에 넣기
@@ -504,12 +505,14 @@ public class RankActivity  extends AppCompatActivity {
 
                             SharedPreferences.Editor editor = preferences.edit();
                             editor.putString("default_rank", temp.substring(0,temp.length()-1));
+                            editor.putString("userRank", code.getAllUserRank());
+                            editor.putString("userGroupRank", code.getUserGroupRank());
                             editor.commit();
                         }
                     }
 
                     @Override
-                    public void onFailure (Call < RankListResponse > call, Throwable t){
+                    public void onFailure (Call < InitialRankListResponse > call, Throwable t){
                         Toast.makeText(RankActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
                         Log.e("통신 오류 발생", t.getMessage());
                         rank_progressbar.setVisibility(View.INVISIBLE);         // 통신 오류 발생시 log 출력 후 progressbar 비활성화

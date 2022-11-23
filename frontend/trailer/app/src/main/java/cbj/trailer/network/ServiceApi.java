@@ -3,6 +3,7 @@ package cbj.trailer.network;
 import cbj.trailer.data.CheckIdRequest;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.InitialLookUpRequest;
+import cbj.trailer.data.InitialRankListResponse;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.LoginRequest;
@@ -34,7 +35,7 @@ public interface ServiceApi {
 
     @Headers({"Content-Type: application/json"})
     @POST("/initialrank")                                           // 랭크 조회 API
-    Call<RankListResponse> defaultRank(@Body InitialLookUpRequest data);
+    Call<InitialRankListResponse> defaultRank(@Body InitialLookUpRequest data);
 
     @Headers({"Content-Type: application/json"})
     @POST("/rank")                                           // 그룹화된 랭크 조회 API
