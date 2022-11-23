@@ -237,7 +237,7 @@ public class JoinActivity extends AppCompatActivity {
         });
 
         //성별 선택
-        String [] sex_type = getResources().getStringArray(R.array.sex);
+        String [] sex_type = getResources().getStringArray(R.array.join_gender);
         ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this
         , android.R.layout.simple_spinner_item, sex_type);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

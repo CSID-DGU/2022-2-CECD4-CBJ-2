@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="sex">
+    <string-array name="join_gender">
         <item>본인의 성별을 선택하세요</item>
         <item>남성</item>
         <item>여성</item>

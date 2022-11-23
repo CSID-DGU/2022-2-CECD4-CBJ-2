@@ -1,9 +1,9 @@
 package cbj.trailer.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -20,9 +20,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+
 import cbj.trailer.R;
+import cbj.trailer.data.InitialLookUpRequest;
 import cbj.trailer.data.LookUpRequest;
-import cbj.trailer.data.LookUpResponse;
+import cbj.trailer.data.RankData;
+import cbj.trailer.data.RankListResponse;
 import cbj.trailer.network.RetrofitClient;
 import cbj.trailer.network.ServiceApi;
 import retrofit2.Call;
@@ -39,6 +45,8 @@ public class RankActivity  extends AppCompatActivity {
     private String userRank;
     private String userGroupRank;
     private String userStep;
+    private String last_last_login_time;
+    private String last_login_time;
     private ProgressBar rank_progressbar;
     private boolean input_age;
     private boolean input_sex;
@@ -48,7 +56,6 @@ public class RankActivity  extends AppCompatActivity {
     private TextView user_rank;
     private TextView user_groupRank;
     private TextView user_walk;
-    private String [] ranking;
     private SharedPreferences preferences;
     private ServiceApi service;
 
@@ -77,10 +84,17 @@ public class RankActivity  extends AppCompatActivity {
         userNickname = preferences.getString("userNickname", "");
         userRank = preferences.getString("userRank", "미정");
         userGroupRank = preferences.getString("userGroupRank", "미정");
-        userStep = preferences.getString("userStep", "미정");
+        userStep = preferences.getString("userStep", "");
+        last_last_login_time = preferences.getString("last_last_login_time", "");
+        last_login_time = preferences.getString("last_login_time", "");
+
+        user_nickname.setText(userNickname);
+        user_rank.setText(userRank);
+        user_groupRank.setText(userGroupRank);
+        user_walk.setText(userStep);
 
         //성별 선택
-        String [] sex_type = getResources().getStringArray(R.array.sex);
+        String [] sex_type = getResources().getStringArray(R.array.rank_gender);
         ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this
                 , android.R.layout.simple_spinner_item, sex_type);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -162,36 +176,93 @@ public class RankActivity  extends AppCompatActivity {
                 }
             }
         });
+
+        if(isNewWeek()) {
+            //새로운 주가 시작되었기 때문에 새로운 랭킹 정보 받아오는 함수 호출
+            defaultLookUp(new InitialLookUpRequest(userId));
+        }
+        else{
+            //기존에 저장해놓은 랭킹 정보 받아오는 함수 호출
+            makeDefaultRank();
+        }
     }
 
-    public void startLookup(LookUpRequest data) {                           // 회원가입을 하는 함수(이전에 톧신을 설명했으므로 요약함)
-        service.userRank(data).enqueue(new Callback<LookUpResponse>() {
+    public boolean isNewWeek(){
+        //첫로그인인 경우
+        if(last_last_login_time.equals("") || preferences.getString("default_rank", "").equals(""))
+            return true;
+
+        int baseYear = Integer.parseInt(last_last_login_time.substring(0,4));
+        int baseMonth = Integer.parseInt(last_last_login_time.substring(5,7))-1;
+        int baseDay = Integer.parseInt(last_last_login_time.substring(8)); //1이 일, 7이 토
+
+        int targetYear = Integer.parseInt(last_login_time.substring(0,4));
+        int targetMonth = Integer.parseInt(last_login_time.substring(5,7))-1;
+        int targetDay = Integer.parseInt(last_login_time.substring(8)); //1이 일, 7이 토
+
+        Calendar baseCal = new GregorianCalendar(baseYear, baseMonth, baseDay);
+        Calendar targetCal = new GregorianCalendar(targetYear, targetMonth, targetDay);
+        long diffSec = (targetCal.getTimeInMillis() - baseCal.getTimeInMillis())/1000;
+        long diffDays = diffSec / (24*60*60);
+
+        //월 : 2, 화 : 3, ....., 토 : 7, 일 : 8
+        if(baseDay == 1)
+            baseDay = 8;
+        if(targetDay==1)
+            targetDay = 8;
+
+        // 최근 접속일로부터 7일이 지났거나 월요일이 지나서 새로운 주차가 시작된 경우 true 반환
+        if(diffDays >= 7 || targetDay - baseDay < 0)
+            return true;
+        else
+            return false;
+    }
+
+    public void startLookup(LookUpRequest data) {
+        service.userRank(data).enqueue(new Callback<RankListResponse>() {
             @Override
-            public void onResponse(Call<LookUpResponse> call, Response<LookUpResponse> response) {
-                LookUpResponse code = response.body();                    // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+            public void onResponse(Call<RankListResponse> call, Response<RankListResponse> response) {
+                RankListResponse code = response.body();                    // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                 rank_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
                 if (code.getCode() == 200) {                            // 랭크 조회
                     //표에 넣기
-                    ranking = code.getGroupRank();
+                    List<RankData> data = code.getRank();
                     int count = 0;
                     //현재 해당 그룹 사용자 수가 7명 미만인 경우
-                    if(ranking[27].equals("-1")){
-                        while(count<7){
-                            if(ranking[count].equals("-1")){
-                                break;
-                            }
-                            else{
-                                TableRow tableRow = new TableRow(RankActivity.this);
-                                tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                                for(int i=0; i<4; i++){
-                                    TextView textView = new TextView(RankActivity.this);
-                                    textView.setText(ranking[4*count+i]);
-                                    textView.setGravity(Gravity.CENTER);
-                                    textView.setTextSize(20);
-                                    tableRow.addView(textView);
-                                }
-                                tableLayout.addView(tableRow);
-                            }
+                    if(data.size() < 7){
+                        while(count<data.size()){
+                            TableRow tableRow = new TableRow(RankActivity.this);
+                            tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                            //등수 동적 생성
+                            TextView textView = new TextView(RankActivity.this);
+                            textView.setText(String.valueOf(data.get(count).getRankIndex()));
+                            textView.setGravity(Gravity.CENTER);
+                            textView.setTextSize(20);
+                            tableRow.addView(textView);
+
+                            //닉네임 동적 생성
+                            TextView textView1 = new TextView(RankActivity.this);
+                            textView1.setText(data.get(count).getUserNickName());
+                            textView1.setGravity(Gravity.CENTER);
+                            textView1.setTextSize(20);
+                            tableRow.addView(textView1);
+
+                            //걸음 수 동적 생성
+                            TextView textView2 = new TextView(RankActivity.this);
+                            textView2.setText(String.valueOf(data.get(count).getSteps()));
+                            textView2.setGravity(Gravity.CENTER);
+                            textView2.setTextSize(20);
+                            tableRow.addView(textView2);
+
+                            //등급 동적 생성
+                            TextView textView3 = new TextView(RankActivity.this);
+                            textView3.setText(data.get(count).getGrade());
+                            textView3.setGravity(Gravity.CENTER);
+                            textView3.setTextSize(20);
+                            tableRow.addView(textView3);
+
+                            tableLayout.addView(tableRow);
                             count+=1;
                         }
                     }
@@ -199,31 +270,51 @@ public class RankActivity  extends AppCompatActivity {
                     else{
                         while(count < 7){
                             if(count == 3 || count == 5){
-                                TableRow tableRow = new TableRow(RankActivity.this);
-                                tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                TableRow tableRow1 = new TableRow(RankActivity.this);
+                                tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                                 for (int i = 0; i < 4; i++) {
                                     TextView textView = new TextView(RankActivity.this);
                                     textView.setText(":");
                                     textView.setGravity(Gravity.CENTER);
                                     textView.setTextSize(20);
-                                    tableRow.addView(textView);
+                                    tableRow1.addView(textView);
                                 }
-                                tableLayout.addView(tableRow);
+                                tableLayout.addView(tableRow1);
                             }
-                            else {
-                                TableRow tableRow = new TableRow(RankActivity.this);
-                                tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                                for (int i = 0; i < 4; i++) {
-                                    TextView textView = new TextView(RankActivity.this);
-                                    textView.setText(ranking[4 * count + i]);
-                                    textView.setGravity(Gravity.CENTER);
-                                    textView.setTextSize(20);
-                                    tableRow.addView(textView);
-                                }
-                                tableLayout.addView(tableRow);
-                            }
+                            TableRow tableRow = new TableRow(RankActivity.this);
+                            tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                            //등수 동적 생성
+                            TextView textView = new TextView(RankActivity.this);
+                            textView.setText(String.valueOf(data.get(count).getRankIndex()));
+                            textView.setGravity(Gravity.CENTER);
+                            textView.setTextSize(20);
+                            tableRow.addView(textView);
+
+                            //닉네임 동적 생성
+                            TextView textView1 = new TextView(RankActivity.this);
+                            textView1.setText(data.get(count).getUserNickName());
+                            textView1.setGravity(Gravity.CENTER);
+                            textView1.setTextSize(20);
+                            tableRow.addView(textView1);
+
+                            //걸음 수 동적 생성
+                            TextView textView2 = new TextView(RankActivity.this);
+                            textView2.setText(String.valueOf(data.get(count).getSteps()));
+                            textView2.setGravity(Gravity.CENTER);
+                            textView2.setTextSize(20);
+                            tableRow.addView(textView2);
+
+                            //등급 동적 생성
+                            TextView textView3 = new TextView(RankActivity.this);
+                            textView3.setText(data.get(count).getGrade());
+                            textView3.setGravity(Gravity.CENTER);
+                            textView3.setTextSize(20);
+                            tableRow.addView(textView3);
+
+                            tableLayout.addView(tableRow);
                             count+=1;
                         }
+                        rank_progressbar.setVisibility(View.INVISIBLE);         // 통신 오류 발생시 log 출력 후 progressbar 비활성화
                         /**
                         while(count < 7){
                             if(count == 3 || count == 5){
@@ -256,7 +347,7 @@ public class RankActivity  extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<LookUpResponse> call, Throwable t) {
+            public void onFailure(Call<RankListResponse> call, Throwable t) {
                 Toast.makeText(RankActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
                 Log.e("통신 오류 발생", t.getMessage());
                 rank_progressbar.setVisibility(View.INVISIBLE);         // 통신 오류 발생시 log 출력 후 progressbar 비활성화
@@ -264,4 +355,217 @@ public class RankActivity  extends AppCompatActivity {
         });
     }
 
+    public void defaultLookUp(InitialLookUpRequest data){
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                service.defaultRank(data).enqueue(new Callback<RankListResponse>() {
+                    @Override
+                    public void onResponse(Call < RankListResponse > call, Response < RankListResponse > response){
+                        RankListResponse code = response.body();                    // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                        rank_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
+                        if (code.getCode() == 200) {                            // 랭크 조회
+                            //표에 넣기
+                            List<RankData> data = code.getRank();
+                            String temp = "";
+
+                            int count = 0;
+                            //현재 해당 그룹 사용자 수가 7명 미만인 경우
+                            if (data.size() < 7) {
+                                while (count < data.size()) {
+                                    TableRow tableRow = new TableRow(RankActivity.this);
+                                    tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                                    //등수 동적 생성
+                                    TextView textView = new TextView(RankActivity.this);
+                                    textView.setText(String.valueOf(data.get(count).getRankIndex()));
+                                    textView.setGravity(Gravity.CENTER);
+                                    textView.setTextSize(20);
+                                    tableRow.addView(textView);
+                                    temp+=String.valueOf(data.get(count).getRankIndex());
+                                    temp+="-";
+
+                                    //닉네임 동적 생성
+                                    TextView textView1 = new TextView(RankActivity.this);
+                                    textView1.setText(data.get(count).getUserNickName());
+                                    textView1.setGravity(Gravity.CENTER);
+                                    textView1.setTextSize(20);
+                                    tableRow.addView(textView1);
+                                    temp+=data.get(count).getUserNickName();
+                                    temp+="-";
+
+                                    //걸음 수 동적 생성
+                                    TextView textView2 = new TextView(RankActivity.this);
+                                    textView2.setText(String.valueOf(data.get(count).getSteps()));
+                                    textView2.setGravity(Gravity.CENTER);
+                                    textView2.setTextSize(20);
+                                    tableRow.addView(textView2);
+                                    temp+=String.valueOf(data.get(count).getSteps());
+                                    temp+="-";
+
+                                    //등급 동적 생성
+                                    TextView textView3 = new TextView(RankActivity.this);
+                                    textView3.setText(data.get(count).getGrade());
+                                    textView3.setGravity(Gravity.CENTER);
+                                    textView3.setTextSize(20);
+                                    tableRow.addView(textView3);
+                                    temp+=data.get(count).getGrade();
+                                    temp+="-";
+
+                                    tableLayout.addView(tableRow);
+                                    count += 1;
+                                }
+                            }
+                            //현재 해당 그룹 사용자 수가 7명 이상인 경우
+                            else {
+                                while (count < 7) {
+                                    if (count == 3 || count == 5) {
+                                        TableRow tableRow1 = new TableRow(RankActivity.this);
+                                        tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                        for (int i = 0; i < 4; i++) {
+                                            TextView textView = new TextView(RankActivity.this);
+                                            textView.setText(":");
+                                            textView.setGravity(Gravity.CENTER);
+                                            textView.setTextSize(20);
+                                            tableRow1.addView(textView);
+                                        }
+                                        tableLayout.addView(tableRow1);
+                                    }
+                                    TableRow tableRow = new TableRow(RankActivity.this);
+                                    tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                    //등수 동적 생성
+                                    TextView textView = new TextView(RankActivity.this);
+                                    textView.setText(String.valueOf(data.get(count).getRankIndex()));
+                                    textView.setGravity(Gravity.CENTER);
+                                    textView.setTextSize(20);
+                                    tableRow.addView(textView);
+                                    temp+=String.valueOf(data.get(count).getRankIndex());
+                                    temp+="-";
+
+                                    //닉네임 동적 생성
+                                    TextView textView1 = new TextView(RankActivity.this);
+                                    textView1.setText(data.get(count).getUserNickName());
+                                    textView1.setGravity(Gravity.CENTER);
+                                    textView1.setTextSize(20);
+                                    tableRow.addView(textView1);
+                                    temp+=data.get(count).getUserNickName();
+                                    temp+="-";
+
+                                    //걸음 수 동적 생성
+                                    TextView textView2 = new TextView(RankActivity.this);
+                                    textView2.setText(String.valueOf(data.get(count).getSteps()));
+                                    textView2.setGravity(Gravity.CENTER);
+                                    textView2.setTextSize(20);
+                                    tableRow.addView(textView2);
+                                    temp+=String.valueOf(data.get(count).getSteps());
+                                    temp+="-";
+
+
+                                    //등급 동적 생성
+                                    TextView textView3 = new TextView(RankActivity.this);
+                                    textView3.setText(data.get(count).getGrade());
+                                    textView3.setGravity(Gravity.CENTER);
+                                    textView3.setTextSize(20);
+                                    tableRow.addView(textView3);
+                                    temp+=data.get(count).getGrade();
+                                    temp+="-";
+
+                                    tableLayout.addView(tableRow);
+                                    count += 1;
+                                }
+                                rank_progressbar.setVisibility(View.INVISIBLE);         // 통신 오류 발생시 log 출력 후 progressbar 비활성화
+                                /**
+                                 while(count < 7){
+                                 if(count == 3 || count == 5){
+                                 TableRow tableRow = new TableRow(RankActivity.this);
+                                 tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                 TextView textView = new TextView(RankActivity.this);
+                                 textView.setText(":");
+                                 textView.setGravity(Gravity.CENTER);
+                                 textView.setTextSize(20);
+                                 tableRow.addView(textView);
+                                 tableLayout.addView(tableRow);
+                                 }
+                                 else {
+                                 TableRow tableRow = new TableRow(RankActivity.this);
+                                 tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                 for (int i = 0; i < 4; i++) {
+                                 TextView textView = new TextView(RankActivity.this);
+                                 textView.setText(ranking[4 * count + i]);
+                                 textView.setGravity(Gravity.CENTER);
+                                 textView.setTextSize(20);
+                                 tableRow.addView(textView);
+                                 }
+                                 tableLayout.addView(tableRow);
+                                 }
+                                 count+=1;
+                                 }*/
+                            }
+
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putString("default_rank", temp.substring(0,temp.length()-1));
+                            editor.commit();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure (Call < RankListResponse > call, Throwable t){
+                        Toast.makeText(RankActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
+                        Log.e("통신 오류 발생", t.getMessage());
+                        rank_progressbar.setVisibility(View.INVISIBLE);         // 통신 오류 발생시 log 출력 후 progressbar 비활성화
+                    }
+                });
+            }
+        },2000);
+    }
+
+    public void makeDefaultRank() {
+        String[] default_rank = preferences.getString("default_rank", "").split("-");
+        int count = 0;
+        //현재 해당 그룹 사용자 수가 7명 미만인 경우
+        if (default_rank.length != 28) {
+            int limit = default_rank.length/4;
+            while (count < limit) {
+                TableRow tableRow = new TableRow(RankActivity.this);
+                tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                for (int i = 0; i < 4; i++) {
+                    TextView textView = new TextView(RankActivity.this);
+                    textView.setText(default_rank[4 * count + i]);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setTextSize(20);
+                    tableRow.addView(textView);
+                }
+                tableLayout.addView(tableRow);
+                count += 1;
+            }
+        }
+        //현재 해당 그룹 사용자 수가 7명 이상인 경우
+        else {
+            while (count < 7) {
+                if (count == 3 || count == 5) {
+                    TableRow tableRow1 = new TableRow(RankActivity.this);
+                    tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    for (int i = 0; i < 4; i++) {
+                        TextView textView = new TextView(RankActivity.this);
+                        textView.setText(":");
+                        textView.setGravity(Gravity.CENTER);
+                        textView.setTextSize(20);
+                        tableRow1.addView(textView);
+                    }
+                    tableLayout.addView(tableRow1);
+                }
+                TableRow tableRow = new TableRow(RankActivity.this);
+                tableRow.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                for (int i = 0; i < 4; i++) {
+                    TextView textView = new TextView(RankActivity.this);
+                    textView.setText(default_rank[4 * count + i]);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setTextSize(20);
+                    tableRow.addView(textView);
+                }
+                tableLayout.addView(tableRow);
+                count += 1;
+            }
+        }
+    }
 }
