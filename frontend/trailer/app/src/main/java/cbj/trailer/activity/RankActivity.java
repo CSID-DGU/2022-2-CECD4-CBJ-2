@@ -104,8 +104,10 @@ public class RankActivity  extends AppCompatActivity {
                     input_sex = true;
                     if(i==1)
                         sex = "M";
-                    else
+                    else if(i==2)
                         sex = "F";
+                    else
+                        sex = "A";
                 }
                 else{
                     input_sex = false;
@@ -193,6 +195,7 @@ public class RankActivity  extends AppCompatActivity {
         if(last_last_login_time.equals("") || preferences.getString("default_rank", "").equals(""))
             return true;
 
+        //이전에 로그인기록이 있었던 경우
         int baseYear = Integer.parseInt(last_last_login_time.substring(0,4));
         int baseMonth = Integer.parseInt(last_last_login_time.substring(5,7))-1;
         int baseDay = Integer.parseInt(last_last_login_time.substring(8)); //1이 일, 7이 토

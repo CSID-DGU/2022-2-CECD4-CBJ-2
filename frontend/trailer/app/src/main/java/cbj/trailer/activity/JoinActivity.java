@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import cbj.trailer.data.CheckIdRequest;
+import cbj.trailer.data.CheckNicknameRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.network.ServiceApi;
@@ -152,7 +153,7 @@ public class JoinActivity extends AppCompatActivity {
                 }
                 boolean noSpecial = join_id.getText().toString().matches("^[ㄱ-ㅎ가-힣a-zA-Z0-9]*$");
                 if (!noSpecial) {
-                    Toast.makeText(JoinActivity.this, "아이디에 특수문자가 들어갔습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(JoinActivity.this, "아이디에 특수문자는 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 // 특수문자 사용 여부 검사
@@ -188,17 +189,15 @@ public class JoinActivity extends AppCompatActivity {
         check_nickname.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 특수문자 사용 여부 검사
                 boolean noSpecial = join_nickname.getText().toString().matches("^[ㄱ-ㅎ가-힣a-zA-Z0-9]*$");
                 if (!noSpecial) {
-                    Toast.makeText(JoinActivity.this, "이름에 특수문자가 들어갔습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(JoinActivity.this, "닉네임에 특수문자는 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                // 특수문자 사용 여부 검사
-                input_nickname = true;
-                join_nickname.setClickable(false);
-                join_nickname.setFocusable(false);        // EditText 수정여부 비활성화
-                check_nickname.setEnabled(false);         // Button 비활성화
-                nickname = join_nickname.getText().toString();
+                
+                join_progressbar.setVisibility(View.VISIBLE);           // progressbar를 활성화 하고 특수문자 확인
+                checkNickname(join_nickname.getText().toString()); // 인터넷 연결 검사, 중복 검사
             }
         });
 
@@ -428,12 +427,13 @@ public class JoinActivity extends AppCompatActivity {
                     Log.w("에러 : ", "코드가 널");
                 }
                 else if (code.getCode() == 200) {                            // 중복이 없다면
-                    Toast.makeText(JoinActivity.this, "사용 가능한 아이디입니다.", Toast.LENGTH_SHORT).show();
                     input_id = true;
                     id = checkId;
+                    Toast.makeText(JoinActivity.this, "사용 가능한 아이디입니다.", Toast.LENGTH_SHORT).show();
                     // 둘 다 올바를 때 input_id를 true로 초기화
 
                 } else {
+                    input_id = false;
                     Toast.makeText(JoinActivity.this, "중복된 아이디가 존재합니다.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -442,6 +442,36 @@ public class JoinActivity extends AppCompatActivity {
             public void onFailure(Call<CodeResponse> call, Throwable t) {
                 Toast.makeText(JoinActivity.this, "아이디 검사 오류 발생", Toast.LENGTH_SHORT).show();
                 Log.e("아이디 검사 오류 발생", t.getMessage());
+                join_progressbar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    public void checkNickname(String checkNickname) {                               // 닉네임을 검사하는 함수(앞의 설명으로 요약함)
+        service.userCheckNickname(new CheckNicknameRequest(checkNickname)).enqueue(new Callback<CodeResponse>() {
+            @Override
+            public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
+                CodeResponse code = response.body();
+                join_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
+                if(code == null){
+                    Log.w("에러 : ", "코드가 널");
+                }
+                else if (code.getCode() == 200) {                            // 중복이 없다면
+                    input_nickname = true;
+                    nickname = checkNickname;
+                    Toast.makeText(JoinActivity.this, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show();
+                    // 둘 다 올바를 때 input_id를 true로 초기화
+
+                } else {
+                    input_nickname = false; //확인해볼 것
+                    Toast.makeText(JoinActivity.this, "중복된 닉네임이 존재합니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CodeResponse> call, Throwable t) {
+                Toast.makeText(JoinActivity.this, "닉네임 검사 오류 발생", Toast.LENGTH_SHORT).show();
+                Log.e("닉네임 검사 오류 발생", t.getMessage());
                 join_progressbar.setVisibility(View.INVISIBLE);
             }
         });
