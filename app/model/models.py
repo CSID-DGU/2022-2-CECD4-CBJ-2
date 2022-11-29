@@ -11,14 +11,38 @@ Base = declarative_base()
 
 
 
+
+
 class UserId(BaseModel):
     person_id: str
 
+class UserNickName(BaseModel):
+    nickname: str
+
 class Steps(UserId):
-    targetSteps: list
+    stepsOf3Weeks: list
 
 class LoginData(UserId):
     password: str
+
+
+# 필터없는 전체 랭크 조회
+# RankData : (rankIndex, userNickname, steps, grade)
+# (person_id, gender, age) -> List(RankData)
+# isNewWeek? -> InitialLookUpRequest(id) -> defaultLookup -> InitialRankListResponse(code, "rank": List<RankData>, grpRank, allRank) // 사용자 아이디만 보내서 받는거
+#            -> LookUpRequest(id, gender, age) -> startLookup -> RankListResponse(code, List<RankData>) // 그룹 정해서 보내서 받는거
+
+# Ranking
+class GroupRank(UserId):
+    gender: str
+    age: int
+  
+class Ranking(Base):
+    __tablename__ = "ranking"
+    person_id = Column(String, ForeignKey("user.person_id"), primary_key=True)
+    nickname = Column(String)
+    steps = Column(Integer)
+    parent = relationship("User", back_populates="child")
 
 
 class WalkCount(Base):
@@ -98,17 +122,18 @@ class User(Base):
     strength = Column(String)
     walk_total_score = Column(Integer)
     children = relationship("WalkCount", back_populates="parent")
+    child = relationship("Ranking", back_populates="parent", uselist=False)
 
 
 class UserBase(BaseModel):
     person_id: str
-    nickname: str
+    nickname: str = ""
     age: int
     gender: str
     home_addrss: Optional[str] = None
     comp_address: Optional[str] = None
     category: Optional[str] = None
-    strength: Optional[str] = None
+    strength: Optional[str] = "중"
     walk_total_score: Optional[int] = None
 
     class Config:

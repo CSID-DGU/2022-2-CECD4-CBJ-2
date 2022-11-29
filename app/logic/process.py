@@ -36,15 +36,11 @@ def removeOutOf(steps, min, max):
     return steps
 
 
-class Intensity(Enum):
-    HIGH = 3
-    MID = 2
-    LOW = 1
 
 
-intensityWeight = {Intensity.HIGH: 1.2, Intensity.MID: 1.0, Intensity.LOW: 0.8}
+strengthWeight = {"상": 1.2, "중": 1.0, "하": 0.8}
 
-scoreWeight = {"5": 1.5, "4": 1.2, "3": 1.0, "2": 0.8, "1": 0.5}
+scoreWeight = {"5": 1.5, "4": 1.25, "3": 1.0, "2": 0.75, "1": 0.5}
 
 # 예측점수
 # (input) score : 1~5 (output) steps * weight
@@ -57,9 +53,8 @@ def applyScore(steps, score):
 # 상중하 운동강도
 # (input) Intensity.XX (output) steps * weight
 
-
-def applyIntensity(steps, intensity):
-    weight = intensityWeight[intensity]
+def applyStrength(steps, strength):
+    weight = strengthWeight[strength]
     return steps * weight
 
 
@@ -81,7 +76,6 @@ def normalize(value, lower, upper):
 
 
 # dummuy data
-dummy_weight = Intensity.HIGH
 # week_score[day] = weight
 # dummy_score = [3, 3, 3, 3, 3, 3, 3]
 
@@ -95,7 +89,7 @@ def getStepsFrom(line):
     return int(line[1])
 
 
-def applyProphet(date_step_list, walk_score):
+def applyProphet(date_step_list, score_and_strength, isApplyScore):
     for line in date_step_list:
         steps = getStepsFrom(line)
         dateStr = getDateStrFrom(line)
@@ -103,14 +97,14 @@ def applyProphet(date_step_list, walk_score):
         # 1000~15000 밖의 데이터 제거
         steps = removeOutOf(steps, min_steps, max_steps)
 
-        # 500 단위로 반올림
-        steps = roundBy(steps, round_by)
+        # 500 단위로 반올림 X
+        # steps = roundBy(steps, round_by)
 
         # 2000~10000 사이로 정규화
         steps = normalize(steps, normalize_min, normalize_max)
 
         # 운동 강도 상,중,하 반영
-        steps = applyIntensity(steps, Intensity.HIGH)
+        steps = applyStrength(steps, score_and_strength["strength"])
 
         dayAndStepsDict[dateStr] = steps
 
@@ -161,15 +155,16 @@ def applyProphet(date_step_list, walk_score):
                             "dayOfWeek": datetime.strptime(
                                 key, '%Y-%m-%d').strftime('%a').lower()})
 
-    for obj in res["mid"]:
-        obj["steps"] = round(applyScore(
-            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+    if(isApplyScore): # for test
+      for obj in res["mid"]:
+          obj["steps"] = round(applyScore(
+              obj["steps"], score_and_strength["score"].get_score_by_day(obj["dayOfWeek"])))
 
-    for obj in res["high"]:
-        obj["steps"] = round(applyScore(
-            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+      for obj in res["high"]:
+          obj["steps"] = round(applyScore(
+              obj["steps"], score_and_strength["score"].get_score_by_day(obj["dayOfWeek"])))
 
-    for obj in res["low"]:
-        obj["steps"] = round(applyScore(
-            obj["steps"], walk_score.get_score_by_day(obj["dayOfWeek"])))
+      for obj in res["low"]:
+          obj["steps"] = round(applyScore(
+              obj["steps"], score_and_strength["score"].get_score_by_day(obj["dayOfWeek"])))
     return res

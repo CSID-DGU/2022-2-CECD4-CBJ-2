@@ -5,7 +5,7 @@
     "period": 7,
     "round_by": 500,
     "interval_width": 0.7,
-    "normalize_min": 2000,
-    "normalize_max": 10000
+    "normalize_min": 1000,
+    "normalize_max": 15000
   }
 }
