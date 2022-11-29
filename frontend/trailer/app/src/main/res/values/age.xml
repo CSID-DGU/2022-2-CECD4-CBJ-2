@@ -10,5 +10,6 @@
         <item>60대</item>
         <item>70대</item>
         <item>80대 이상</item>
+        <item>전체</item>
     </string-array>
 </resources>

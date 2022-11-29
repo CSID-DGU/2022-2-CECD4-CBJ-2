@@ -1,6 +1,7 @@
 package cbj.trailer.network;
 
 import cbj.trailer.data.CheckIdRequest;
+import cbj.trailer.data.CheckNicknameRequest;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.InitialLookUpRequest;
 import cbj.trailer.data.InitialRankListResponse;
@@ -32,6 +33,10 @@ public interface ServiceApi {
     @Headers({"Content-Type: application/json"})
     @POST("/check/id")                                           // 아이디 중복검사 API
     Call<CodeResponse> userCheckID(@Body CheckIdRequest data);
+
+    @Headers({"Content-Type: application/json"})
+    @POST("/check/nickname")                                           // 아이디 중복검사 API
+    Call<CodeResponse> userCheckNickname(@Body CheckNicknameRequest data);
 
     @Headers({"Content-Type: application/json"})
     @POST("/initialrank")                                           // 랭크 조회 API
