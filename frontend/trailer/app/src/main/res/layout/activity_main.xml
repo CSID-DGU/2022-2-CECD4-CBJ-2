@@ -21,7 +21,10 @@
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        tools:ignore="MissingConstraints">
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="-73dp">
+
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
@@ -30,12 +33,38 @@
             android:background="?attr/colorPrimary"
             android:minHeight="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            tools:ignore="MissingConstraints"
             app:tabSelectedTextColor="@color/white"
-            app:tabTextColor="@color/gray"
             app:tabTextAppearance="@style/MyCustomTabText"
-            />
+            app:tabTextColor="@color/gray"
+            tools:ignore="MissingConstraints" />
     </androidx.viewpager.widget.ViewPager>
+
+    <ImageButton
+        android:id="@+id/rank_page"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="right"
+        android:adjustViewBounds="true"
+        android:contentDescription="랭킹"
+        android:scaleType="fitCenter"
+        android:src="@drawable/rank_img"
+        android:layout_marginRight="5dp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toStartOf="@+id/my_page"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/my_page"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="right"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/mypage_img"
+        android:visibility="visible"
+        android:contentDescription="마이페이지"
+        app:layout_constraintEnd_toEndOf="@+id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:layout_width="wrap_content"

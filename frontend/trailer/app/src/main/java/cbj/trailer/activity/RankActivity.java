@@ -147,8 +147,10 @@ public class RankActivity  extends AppCompatActivity {
                         age = 60;
                     else if(i==7)
                         age = 70;
-                    else
+                    else if(i==8)
                         age = 80;
+                    else
+                        age = 0;
                 }
                 else{
                     input_age = false;

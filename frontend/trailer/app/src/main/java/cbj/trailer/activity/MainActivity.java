@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         androidx.appcompat.widget.Toolbar toolbar =
                 findViewById(R.id.toolbar);
 
+
         setSupportActionBar(toolbar);
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);

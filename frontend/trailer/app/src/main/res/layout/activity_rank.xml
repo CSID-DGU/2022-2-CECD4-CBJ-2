@@ -122,11 +122,12 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="25dp">
-
+                <!--
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:background="@drawable/gold_medal" />
+                    -->
 
                 <TextView
                     android:id="@+id/user_rank"
@@ -138,10 +139,12 @@
                     android:textSize="15dp"
                     android:text="Gold" />
 
+                <!--
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:background="@drawable/silver_medal" />
+                    -->
 
                 <TextView
                     android:id="@+id/user_groupRank"
