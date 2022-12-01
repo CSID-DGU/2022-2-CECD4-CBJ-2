@@ -15,6 +15,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
@@ -41,6 +43,9 @@ import cbj.trailer.R;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ImageButton rank_btn;
+    private ImageButton myPage_btn;
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +55,11 @@ public class MainActivity extends AppCompatActivity {
         androidx.appcompat.widget.Toolbar toolbar =
                 findViewById(R.id.toolbar);
 
+
         setSupportActionBar(toolbar);
+
+        rank_btn = findViewById(R.id.rank_page);
+        myPage_btn = findViewById(R.id.my_page);
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
 
@@ -82,6 +91,24 @@ public class MainActivity extends AppCompatActivity {
             public void onTabReselected(TabLayout.Tab tab) {
             }
 
+        });
+
+        rank_btn.setOnClickListener(new View.OnClickListener() {       // 버튼을 클릭 했을 때 모션을 정의
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), RankActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        myPage_btn.setOnClickListener(new View.OnClickListener() {       // 버튼을 클릭 했을 때 모션을 정의
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MyPageActivity.class);
+                startActivity(intent);
+            }
         });
 
 

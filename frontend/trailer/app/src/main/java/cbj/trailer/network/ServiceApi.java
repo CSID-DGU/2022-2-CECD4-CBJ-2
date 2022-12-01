@@ -35,7 +35,7 @@ public interface ServiceApi {
     Call<CodeResponse> userCheckID(@Body CheckIdRequest data);
 
     @Headers({"Content-Type: application/json"})
-    @POST("/check/nickname")                                           // 아이디 중복검사 API
+    @POST("/check/nickname")                                           // 닉네임 중복검사 API
     Call<CodeResponse> userCheckNickname(@Body CheckNicknameRequest data);
 
     @Headers({"Content-Type: application/json"})
