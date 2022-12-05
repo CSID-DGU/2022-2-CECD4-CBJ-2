@@ -3,10 +3,10 @@ package cbj.trailer.data;
 import com.google.gson.annotations.SerializedName;
 
 public class CheckIdRequest {
-    @SerializedName("UserId")
-    private String userId;
+    @SerializedName("person_id")
+    private String person_id;
 
-    public CheckIdRequest(String userId) {
-        this.userId = userId;
+    public CheckIdRequest(String person_id) {
+        this.person_id = person_id;
     }
 }

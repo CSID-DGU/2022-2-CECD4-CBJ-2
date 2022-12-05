@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="sex">
-        <item>본인의 성별을 선택하세요</item>
+    <string-array name="rank_gender">
+        <item>성별</item>
         <item>남성</item>
         <item>여성</item>
+        <item>전체</item>
     </string-array>
 </resources>

@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import cbj.trailer.data.CheckIdRequest;
+import cbj.trailer.data.CheckNicknameRequest;
 import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.JoinRequest;
 import cbj.trailer.network.ServiceApi;
@@ -39,7 +40,8 @@ public class JoinActivity extends AppCompatActivity {
 
     private TextView title;
     private EditText join_id;
-    private EditText join_pwd;
+    private EditText join_pwd1;
+    private EditText join_pwd2;
     private EditText join_nickname;
     private EditText join_age;
     private Spinner join_sex;
@@ -62,10 +64,10 @@ public class JoinActivity extends AppCompatActivity {
     private String sex;
     private String homeAddress;
     private String companyAddress;
-    private String category;
+    private String category = "";
     private String exerciseIntensity;
     private boolean input_id;
-    private boolean input_pwd;
+    private boolean input_pwd1;
     private boolean input_nickname;
     private boolean input_age;
     private boolean input_sex;
@@ -88,10 +90,11 @@ public class JoinActivity extends AppCompatActivity {
         spannableString.setSpan(new RelativeSizeSpan(1.3f), 0, 5, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         title.setText(spannableString);
 
-        //service = RetrofitClient.getClient().create(ServiceApi.class);  // 통신을 위한 ServiceApi 생성
+        service = RetrofitClient.getClient().create(ServiceApi.class);  // 통신을 위한 ServiceApi 생성
 
         join_id = findViewById(R.id.join_id);
-        join_pwd = findViewById(R.id.join_pwd);
+        join_pwd1 = findViewById(R.id.join_pwd1);
+        join_pwd2 = findViewById(R.id.join_pwd2);
         join_nickname = findViewById(R.id.join_nickname);
         join_age = findViewById(R.id.join_age);
         join_sex = findViewById(R.id.join_sex);
@@ -111,7 +114,7 @@ public class JoinActivity extends AppCompatActivity {
         join_progressbar = findViewById(R.id.join_pbar);                // xml의 컴포넌트와 각각 연결
 
         input_id = false;
-        input_pwd = false;
+        input_pwd1 = false;
         input_nickname = false;
         input_age = false;
         input_sex = false;
@@ -120,7 +123,7 @@ public class JoinActivity extends AppCompatActivity {
         input_exerciseIntensity = false;
 
 
-        //id 4자리 이상인지 확인
+        //id 입력이 변경되었는지 확인 후 다시 아이디 검사 하도록 boolean 변수 설정
         join_id.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -140,13 +143,17 @@ public class JoinActivity extends AppCompatActivity {
         check_id.setOnClickListener(new View.OnClickListener() {        // 버튼을 클릭 했을 때 모션을 정의
             @Override
             public void onClick(View v) {
-                if(!(join_id.getText().toString().length() > 3)){
+                if(join_id.getText().toString() == null || join_id.getText().toString().equals("")) {
+                    Toast.makeText(JoinActivity.this, "아이디를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!(join_id.getText().toString().length() > 3)) {
                     Toast.makeText(JoinActivity.this, "아이디는 4글자 이상이어야 합니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 boolean noSpecial = join_id.getText().toString().matches("^[ㄱ-ㅎ가-힣a-zA-Z0-9]*$");
                 if (!noSpecial) {
-                    Toast.makeText(JoinActivity.this, "아이디에 특수문자가 들어갔습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(JoinActivity.this, "아이디에 특수문자는 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 // 특수문자 사용 여부 검사
@@ -157,7 +164,7 @@ public class JoinActivity extends AppCompatActivity {
         });
 
         //pwd 8자리 이상인지 확인
-        join_pwd.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
+        join_pwd1.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -166,11 +173,11 @@ public class JoinActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String cor_pwd = s.toString();
                 if (cor_pwd.length() > 7) {
-                    input_pwd = true;
+                    input_pwd1 = true;
                     pwd = cor_pwd;
                 }
                 else
-                    input_pwd = false;
+                    input_pwd1 = false;
             }                                                           // 아이디가 4글자 이상일 때 버튼 활성화
 
             @Override
@@ -182,22 +189,20 @@ public class JoinActivity extends AppCompatActivity {
         check_nickname.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 특수문자 사용 여부 검사
                 boolean noSpecial = join_nickname.getText().toString().matches("^[ㄱ-ㅎ가-힣a-zA-Z0-9]*$");
                 if (!noSpecial) {
-                    Toast.makeText(JoinActivity.this, "이름에 특수문자가 들어갔습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(JoinActivity.this, "닉네임에 특수문자는 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                // 특수문자 사용 여부 검사
-                input_nickname = true;
-                join_nickname.setClickable(false);
-                join_nickname.setFocusable(false);        // EditText 수정여부 비활성화
-                check_nickname.setEnabled(false);         // Button 비활성화
-                nickname = join_nickname.getText().toString();
+                
+                join_progressbar.setVisibility(View.VISIBLE);           // progressbar를 활성화 하고 특수문자 확인
+                checkNickname(join_nickname.getText().toString()); // 인터넷 연결 검사, 중복 검사
             }
         });
 
         //나이 숫자를 제대로 입력했는지 확인
-        join_age.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
+        join_age.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -205,7 +210,7 @@ public class JoinActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-            }                                                           // 아이디가 4글자 이상일 때 버튼 활성화
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -231,7 +236,7 @@ public class JoinActivity extends AppCompatActivity {
         });
 
         //성별 선택
-        String [] sex_type = getResources().getStringArray(R.array.sex);
+        String [] sex_type = getResources().getStringArray(R.array.join_gender);
         ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this
         , android.R.layout.simple_spinner_item, sex_type);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -242,7 +247,10 @@ public class JoinActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if(i!=0) {
                     input_sex = true;
-                    sex = sex_type[i];
+                    if(i==1)
+                        sex = "M";
+                    else
+                        sex = "F";
                 }
                 else{
                     input_sex = false;
@@ -330,7 +338,7 @@ public class JoinActivity extends AppCompatActivity {
         join_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(input_id && input_pwd && input_nickname && input_age && input_sex && input_homeAddress && input_companyAddress && input_exerciseIntensity){
+                if(input_id && input_pwd1 && input_nickname && input_age && input_sex && input_homeAddress && input_companyAddress && input_exerciseIntensity){
                     if(join_movieTheater.isChecked()){
                         category+="영화관,";
                     }
@@ -351,11 +359,23 @@ public class JoinActivity extends AppCompatActivity {
                     }
                     if(!category.equals(""))
                         category = category.substring(0,category.length()-1);
+                    if(join_pwd1.getText().toString() != null && !join_pwd1.getText().toString().equals("") && join_pwd2.getText().toString() != null && !join_pwd2.getText().toString().equals("")) {
+                        if (join_pwd1.getText().toString().equals(join_pwd2.getText().toString())) {
+                            join_progressbar.setVisibility(View.VISIBLE);   // progressbar를 활성화 해주고
+                            startJoin(new JoinRequest(id, pwd, nickname, age, sex, homeAddress, companyAddress, category, exerciseIntensity));      // 회원가입통신 시작
+                        }
+                        else {
+                            Toast.makeText(JoinActivity.this, "동일한 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else{
+                        Toast.makeText(JoinActivity.this, "8자리 이상의 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 else{
                     if(!input_id)
                         Toast.makeText(JoinActivity.this, "아이디 검사를 진행해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
-                    else if(!input_pwd)
+                    else if(!input_pwd1)
                         Toast.makeText(JoinActivity.this, "8자리 이상의 비밀번호를 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
                     else if(!input_nickname)
                         Toast.makeText(JoinActivity.this, "닉네임 검사를 진행해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
@@ -370,8 +390,6 @@ public class JoinActivity extends AppCompatActivity {
                     else
                         Toast.makeText(JoinActivity.this, "본인이 원하는 운동강도를 선택해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
                 }
-                join_progressbar.setVisibility(View.VISIBLE);   // progressbar를 활성화 해주고
-                startJoin(new JoinRequest(id, pwd, nickname, age, sex, homeAddress, companyAddress, category, exerciseIntensity));      // 회원가입통신 시작
             }
         });
     }
@@ -405,14 +423,17 @@ public class JoinActivity extends AppCompatActivity {
             public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
                 CodeResponse code = response.body();
                 join_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
-
-                if (code.getCode() == 200) {                            // 중복이 없다면
-                    Toast.makeText(JoinActivity.this, "사용 가능한 아이디입니다.", Toast.LENGTH_SHORT).show();
+                if(code == null){
+                    Log.w("에러 : ", "코드가 널");
+                }
+                else if (code.getCode() == 200) {                            // 중복이 없다면
                     input_id = true;
                     id = checkId;
+                    Toast.makeText(JoinActivity.this, "사용 가능한 아이디입니다.", Toast.LENGTH_SHORT).show();
                     // 둘 다 올바를 때 input_id를 true로 초기화
 
                 } else {
+                    input_id = false;
                     Toast.makeText(JoinActivity.this, "중복된 아이디가 존재합니다.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -421,6 +442,36 @@ public class JoinActivity extends AppCompatActivity {
             public void onFailure(Call<CodeResponse> call, Throwable t) {
                 Toast.makeText(JoinActivity.this, "아이디 검사 오류 발생", Toast.LENGTH_SHORT).show();
                 Log.e("아이디 검사 오류 발생", t.getMessage());
+                join_progressbar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    public void checkNickname(String checkNickname) {                               // 닉네임을 검사하는 함수(앞의 설명으로 요약함)
+        service.userCheckNickname(new CheckNicknameRequest(checkNickname)).enqueue(new Callback<CodeResponse>() {
+            @Override
+            public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
+                CodeResponse code = response.body();
+                join_progressbar.setVisibility(View.INVISIBLE);         // progressbar 비활성화
+                if(code == null){
+                    Log.w("에러 : ", "코드가 널");
+                }
+                else if (code.getCode() == 200) {                            // 중복이 없다면
+                    input_nickname = true;
+                    nickname = checkNickname;
+                    Toast.makeText(JoinActivity.this, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show();
+                    // 둘 다 올바를 때 input_id를 true로 초기화
+
+                } else {
+                    input_nickname = false; //확인해볼 것
+                    Toast.makeText(JoinActivity.this, "중복된 닉네임이 존재합니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CodeResponse> call, Throwable t) {
+                Toast.makeText(JoinActivity.this, "닉네임 검사 오류 발생", Toast.LENGTH_SHORT).show();
+                Log.e("닉네임 검사 오류 발생", t.getMessage());
                 join_progressbar.setVisibility(View.INVISIBLE);
             }
         });

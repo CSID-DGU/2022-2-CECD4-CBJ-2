@@ -7,9 +7,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -53,10 +51,12 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 import cbj.trailer.R;
+import cbj.trailer.data.CodeResponse;
 import cbj.trailer.data.InitialDataRequest;
 import cbj.trailer.data.LoginRequest;
 import cbj.trailer.data.LoginResponse;
 import cbj.trailer.data.TargetStepsOfDayResponse;
+import cbj.trailer.network.RetrofitClient;
 import cbj.trailer.network.ServiceApi;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -81,7 +81,6 @@ public class LoginActivity extends AppCompatActivity {
     private final String TAG = "BasicHistoryAPI";
     private int [] health_data_day;
     private int [] health_data_week;
-    private int [] targetStepsofDay;
     String[] stepsOf3weeks = new String[42];
 
 
@@ -90,6 +89,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
+
+        service = RetrofitClient.getClient().create(ServiceApi.class);
 
         title = (TextView)findViewById(R.id.login_main);
         String titleMessage = title.getText().toString();
@@ -102,12 +103,12 @@ public class LoginActivity extends AppCompatActivity {
 
         //이전에 로그인 한 경력이 있어서 자동 로그인이 되는 경우
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
-        /**
-        if (preferences.getString("my_cookie", "") != ""){
+
+        if (preferences.getString("userId", "") != ""){
             isAutomatic = true;
             startAutomaticLogin();
         }
-         **/
+
         login_id = findViewById(R.id.login_id);
         login_pwd = findViewById(R.id.login_pwd);
 
@@ -177,6 +178,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tryLogin();
+                login_progressbar.setVisibility(View.VISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
             }                 // 로그인을 시도함
         });
 
@@ -209,6 +211,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse user = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
                 if (user.getCode() == 200) {                            // 로그인 성공이라면
+
                     //로그인 이력 있는 경우 바로 Main
                     //로그인 이력 없는 경우 권한 요청 후 데이터 받아서 넘김
                     // 데이터를 읽어올 때 필요한 권한들 정의
@@ -228,7 +231,8 @@ public class LoginActivity extends AppCompatActivity {
                     //로그인한 이력이 있다는 것을 남기기 위해 쿠키 정보 저장
                     Calendar cal = Calendar.getInstance();
                     SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("my_cookie", response.headers().get("Set-Cookie"));
+                    editor.putString("userId", user.getUserId());
+                    editor.putString("userNickname", user.getUserNickname());
                     editor.commit();
 
                     //구글 로그인
@@ -248,12 +252,14 @@ public class LoginActivity extends AppCompatActivity {
                             REQUEST_OAUTH_REQUEST_CODE,
                             GoogleSignIn.getLastSignedInAccount(LoginActivity.this),
                             fitnessOptions);
-                    finish();
-                } else if (user.getCode() == 204)                       // 아이디가 존재하지 않을 경우
+                } else if (user.getCode() == 204) {                   // 아이디가 존재하지 않을 경우
                     Toast.makeText(LoginActivity.this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
-                else                                                    // 비밀번호가 일치하지 않을 경우
+                    login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                }
+                else {                                                  // 비밀번호가 일치하지 않을 경우
                     Toast.makeText(LoginActivity.this, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
-                login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                    login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
+                }
             }
 
             @Override
@@ -313,11 +319,11 @@ public class LoginActivity extends AppCompatActivity {
     public synchronized void subscribe(){
         health_data_day = new int[14];
         for(int i=0; i<14; i++){
-            health_data_day[i] = 0;
+            health_data_day[i] = -1;
         }
         health_data_week = new int[12];
         for(int i=0; i<12; i++){
-            health_data_week[i] = 0;
+            health_data_week[i] = -1;
         }
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
@@ -350,13 +356,13 @@ public class LoginActivity extends AppCompatActivity {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             intent.putExtra("health_info_day", health_data_day);
                                             intent.putExtra("health_info_week", health_data_week);
-                                            service.initialData(new InitialDataRequest(stepsOf3weeks)).enqueue(new Callback<TargetStepsOfDayResponse>() {
+                                            service.initialData(new InitialDataRequest(preferences.getString("userId", ""), stepsOf3weeks)).enqueue(new Callback<CodeResponse>() {
 
                                                 @Override
-                                                public void onResponse(Call<TargetStepsOfDayResponse> call, Response<TargetStepsOfDayResponse> response) {
-                                                    TargetStepsOfDayResponse targetSteps = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
-                                                    if (targetSteps.getCode() == 200) {                            // 서버와의 통신 성공
-                                                        intent.putExtra("targetSteps", targetSteps.getTargetSteps());
+                                                public void onResponse(Call<CodeResponse> call, Response<CodeResponse> response) {
+                                                    CodeResponse code = response.body();                   // 응답받은 body의 객체를 넣고 code에 따라 활동이 나뉨
+                                                    if (code.getCode() == 200) {                            // 서버와의 통신 성공
+                                                        //intent.putExtra("targetSteps", targetSteps.getTargetSteps());
                                                         Log.w("걸음수", "걸음 데이터 송신과 목표 걸음 수 수신 성공");
                                                     }
                                                     else                                                    // 서버와의 통신 오류
@@ -365,7 +371,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 }
 
                                                 @Override
-                                                public void onFailure(Call<TargetStepsOfDayResponse> call, Throwable t) {
+                                                public void onFailure(Call<CodeResponse> call, Throwable t) {
                                                     Toast.makeText(LoginActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
                                                     Log.e("통신 오류 발생", t.getMessage());
                                                     login_progressbar.setVisibility(View.INVISIBLE);        // 통신의 오류가 생김, progressbar 비활성화
@@ -382,7 +388,17 @@ public class LoginActivity extends AppCompatActivity {
                                             else{
                                                 editor.putString("last_login_time", cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH));
                                             }
+                                            int count = 0;
+                                            int temp = 0;
+                                            while(count < 7){
+                                                if(health_data_day[count] == -1){
+                                                    break;
+                                                }
+                                                count+=1;
+                                            }
+                                            editor.putString("userStep", String.valueOf(health_data_day[count-1]));
                                             editor.commit();
+                                            login_progressbar.setVisibility(View.INVISIBLE);        // 로그인 모션이 끝났으니 progressbar 비활성화
                                             startActivity(intent);                              // 성공이라면 Main 액티비티로 넘어가고 현 액티비티 종료
                                             finish();
                                         }
@@ -779,27 +795,6 @@ public class LoginActivity extends AppCompatActivity {
             //최근 3주간 접속이 한번도 없었던 경우
             if(diffDays > 21)
                 diffDays = 21;
-
-//            if(diffDays > 7) { // 로그인 접속이 7일이 넘은 경우
-//                // popup
-//                AlertDialog.Builder oDialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Light_Dialog);
-//                oDialog.setMessage("앱을 종료하시겠습니까?")
-//                        .setTitle("일반 Dialog")
-//                        .setPositiveButton("아니오", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                Log.i("Dialog", "취소");
-//                                Toast.makeText(getApplicationContext(), "취소", Toast.LENGTH_LONG).show();
-//                            }
-//                        })
-//                        .setNeutralButton("예", new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                MainActivity.finish();
-//                            }
-//                        })
-//                        .setCancelable(false) // 백버튼으로 팝업창이 닫히지 않도록 한다.
-//                        .show();
-//            }
 
             int diff = (int)diffDays;
 
