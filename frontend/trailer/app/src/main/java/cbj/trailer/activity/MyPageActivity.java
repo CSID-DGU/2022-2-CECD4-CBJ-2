@@ -3,6 +3,7 @@ package cbj.trailer.activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -51,22 +52,22 @@ public class MyPageActivity extends AppCompatActivity{
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         String day = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.KOREAN);
-        String today = "";
+        int today = 0;
 
         if(day.equals("월"))
-            today = preferences.getString("mon_steps", "");
-        else if(day.equals('화'))
-            today = preferences.getString("tue_steps", "");
-        else if(day.equals('수'))
-            today = preferences.getString("wed_steps", "");
-        else if(day.equals('목'))
-            today = preferences.getString("thu_steps", "");
-        else if(day.equals('금'))
-            today = preferences.getString("fri_steps", "");
-        else if(day.equals('토'))
-            today = preferences.getString("sat_steps", "");
+            today = preferences.getInt("mon_steps", 0);
+        else if(day.equals("화"))
+            today = preferences.getInt("tue_steps", 0);
+        else if(day.equals("수"))
+            today = preferences.getInt("wed_steps", 0);
+        else if(day.equals("목"))
+            today = preferences.getInt("thu_steps", 0);
+        else if(day.equals("금"))
+            today = preferences.getInt("fri_steps", 0);
+        else if(day.equals("토"))
+            today = preferences.getInt("sat_steps", 0);
         else
-            today = preferences.getString("sun_steps", "");
+            today = preferences.getInt("sun_steps", 0);
 
         testLinearLayout = findViewById(R.id.test_linearLayout);
         nickname = findViewById(R.id.name);
@@ -95,8 +96,12 @@ public class MyPageActivity extends AppCompatActivity{
         allGroupRank.setText(userRank);
         groupRank.setText(userGroupRank);
         todaySteps.setText(userStep);
-        goalSteps.setText("오늘의 추천 걸음 수는 "+today+" 걸음 입니다.:)"); //오늘 날짜 찾아서 넣기
+        goalSteps.setText("오늘의 추천 걸음 수는 "+String.valueOf(today)+" 걸음 입니다.:)"); //오늘 날짜 찾아서 넣기
         scorebyweek.setText("이번주 합계 "+String.valueOf(score)+"점");
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("scoreAccept", false);
+        editor.commit();
 
         if(age >= 60){
             youtubeId1 = youtubeIdForOld[0];

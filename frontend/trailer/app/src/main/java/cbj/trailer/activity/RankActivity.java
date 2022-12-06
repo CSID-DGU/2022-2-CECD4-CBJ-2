@@ -90,6 +90,10 @@ public class RankActivity  extends AppCompatActivity {
         user_nickname.setText(userNickname);
         user_walk.setText(userStep);
 
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("scoreAccept", false);
+        editor.commit();
+
         //성별 선택
         String [] sex_type = getResources().getStringArray(R.array.rank_gender);
         ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this
@@ -234,6 +238,8 @@ public class RankActivity  extends AppCompatActivity {
                     //표에 넣기
                     List<RankData> data = code.getRank();
                     int count = 0;
+                    tableLayout.removeViews(1,tableLayout.getChildCount()-1);
+
                     //현재 해당 그룹 사용자 수가 7명 미만인 경우
                     if(data.size() < 7){
                         while(count<data.size()){
@@ -243,28 +249,28 @@ public class RankActivity  extends AppCompatActivity {
                             //등수 동적 생성
                             TextView textView = new TextView(RankActivity.this);
                             textView.setText(String.valueOf(data.get(count).getRankIndex()));
-                            textView.setGravity(Gravity.CENTER);
+                            textView.setGravity(Gravity.LEFT);
                             textView.setTextSize(20);
                             tableRow.addView(textView);
 
                             //닉네임 동적 생성
                             TextView textView1 = new TextView(RankActivity.this);
                             textView1.setText(data.get(count).getUserNickName());
-                            textView1.setGravity(Gravity.CENTER);
+                            textView1.setGravity(Gravity.LEFT);
                             textView1.setTextSize(20);
                             tableRow.addView(textView1);
 
                             //걸음 수 동적 생성
                             TextView textView2 = new TextView(RankActivity.this);
                             textView2.setText(String.valueOf(data.get(count).getSteps()));
-                            textView2.setGravity(Gravity.CENTER);
+                            textView2.setGravity(Gravity.LEFT);
                             textView2.setTextSize(20);
                             tableRow.addView(textView2);
 
                             //등급 동적 생성
                             TextView textView3 = new TextView(RankActivity.this);
                             textView3.setText(data.get(count).getGrade());
-                            textView3.setGravity(Gravity.CENTER);
+                            textView3.setGravity(Gravity.LEFT);
                             textView3.setTextSize(20);
                             tableRow.addView(textView3);
 
@@ -275,13 +281,13 @@ public class RankActivity  extends AppCompatActivity {
                     //현재 해당 그룹 사용자 수가 7명 이상인 경우
                     else{
                         while(count < 7){
-                            if(count == 3 || count == 5){
+                            if(count == 3 || count == 4){
                                 TableRow tableRow1 = new TableRow(RankActivity.this);
                                 tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                                 for (int i = 0; i < 4; i++) {
                                     TextView textView = new TextView(RankActivity.this);
                                     textView.setText(":");
-                                    textView.setGravity(Gravity.CENTER);
+                                    textView.setGravity(Gravity.LEFT);
                                     textView.setTextSize(20);
                                     tableRow1.addView(textView);
                                 }
@@ -292,28 +298,28 @@ public class RankActivity  extends AppCompatActivity {
                             //등수 동적 생성
                             TextView textView = new TextView(RankActivity.this);
                             textView.setText(String.valueOf(data.get(count).getRankIndex()));
-                            textView.setGravity(Gravity.CENTER);
+                            textView.setGravity(Gravity.LEFT);
                             textView.setTextSize(20);
                             tableRow.addView(textView);
 
                             //닉네임 동적 생성
                             TextView textView1 = new TextView(RankActivity.this);
                             textView1.setText(data.get(count).getUserNickName());
-                            textView1.setGravity(Gravity.CENTER);
+                            textView1.setGravity(Gravity.LEFT);
                             textView1.setTextSize(20);
                             tableRow.addView(textView1);
 
                             //걸음 수 동적 생성
                             TextView textView2 = new TextView(RankActivity.this);
                             textView2.setText(String.valueOf(data.get(count).getSteps()));
-                            textView2.setGravity(Gravity.CENTER);
+                            textView2.setGravity(Gravity.LEFT);
                             textView2.setTextSize(20);
                             tableRow.addView(textView2);
 
                             //등급 동적 생성
                             TextView textView3 = new TextView(RankActivity.this);
                             textView3.setText(data.get(count).getGrade());
-                            textView3.setGravity(Gravity.CENTER);
+                            textView3.setGravity(Gravity.LEFT);
                             textView3.setTextSize(20);
                             tableRow.addView(textView3);
 
@@ -385,7 +391,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //등수 동적 생성
                                     TextView textView = new TextView(RankActivity.this);
                                     textView.setText(String.valueOf(data.get(count).getRankIndex()));
-                                    textView.setGravity(Gravity.CENTER);
+                                    textView.setGravity(Gravity.LEFT);
                                     textView.setTextSize(20);
                                     tableRow.addView(textView);
                                     temp+=String.valueOf(data.get(count).getRankIndex());
@@ -394,7 +400,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //닉네임 동적 생성
                                     TextView textView1 = new TextView(RankActivity.this);
                                     textView1.setText(data.get(count).getUserNickName());
-                                    textView1.setGravity(Gravity.CENTER);
+                                    textView1.setGravity(Gravity.LEFT);
                                     textView1.setTextSize(20);
                                     tableRow.addView(textView1);
                                     temp+=data.get(count).getUserNickName();
@@ -403,7 +409,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //걸음 수 동적 생성
                                     TextView textView2 = new TextView(RankActivity.this);
                                     textView2.setText(String.valueOf(data.get(count).getSteps()));
-                                    textView2.setGravity(Gravity.CENTER);
+                                    textView2.setGravity(Gravity.LEFT);
                                     textView2.setTextSize(20);
                                     tableRow.addView(textView2);
                                     temp+=String.valueOf(data.get(count).getSteps());
@@ -412,7 +418,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //등급 동적 생성
                                     TextView textView3 = new TextView(RankActivity.this);
                                     textView3.setText(data.get(count).getGrade());
-                                    textView3.setGravity(Gravity.CENTER);
+                                    textView3.setGravity(Gravity.LEFT);
                                     textView3.setTextSize(20);
                                     tableRow.addView(textView3);
                                     temp+=data.get(count).getGrade();
@@ -425,13 +431,13 @@ public class RankActivity  extends AppCompatActivity {
                             //현재 해당 그룹 사용자 수가 7명 이상인 경우
                             else {
                                 while (count < 7) {
-                                    if (count == 3 || count == 5) {
+                                    if (count == 3 || count == 4) {
                                         TableRow tableRow1 = new TableRow(RankActivity.this);
                                         tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                                         for (int i = 0; i < 4; i++) {
                                             TextView textView = new TextView(RankActivity.this);
                                             textView.setText(":");
-                                            textView.setGravity(Gravity.CENTER);
+                                            textView.setGravity(Gravity.LEFT);
                                             textView.setTextSize(20);
                                             tableRow1.addView(textView);
                                         }
@@ -442,7 +448,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //등수 동적 생성
                                     TextView textView = new TextView(RankActivity.this);
                                     textView.setText(String.valueOf(data.get(count).getRankIndex()));
-                                    textView.setGravity(Gravity.CENTER);
+                                    textView.setGravity(Gravity.LEFT);
                                     textView.setTextSize(20);
                                     tableRow.addView(textView);
                                     temp+=String.valueOf(data.get(count).getRankIndex());
@@ -451,7 +457,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //닉네임 동적 생성
                                     TextView textView1 = new TextView(RankActivity.this);
                                     textView1.setText(data.get(count).getUserNickName());
-                                    textView1.setGravity(Gravity.CENTER);
+                                    textView1.setGravity(Gravity.LEFT);
                                     textView1.setTextSize(20);
                                     tableRow.addView(textView1);
                                     temp+=data.get(count).getUserNickName();
@@ -460,7 +466,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //걸음 수 동적 생성
                                     TextView textView2 = new TextView(RankActivity.this);
                                     textView2.setText(String.valueOf(data.get(count).getSteps()));
-                                    textView2.setGravity(Gravity.CENTER);
+                                    textView2.setGravity(Gravity.LEFT);
                                     textView2.setTextSize(20);
                                     tableRow.addView(textView2);
                                     temp+=String.valueOf(data.get(count).getSteps());
@@ -470,7 +476,7 @@ public class RankActivity  extends AppCompatActivity {
                                     //등급 동적 생성
                                     TextView textView3 = new TextView(RankActivity.this);
                                     textView3.setText(data.get(count).getGrade());
-                                    textView3.setGravity(Gravity.CENTER);
+                                    textView3.setGravity(Gravity.LEFT);
                                     textView3.setTextSize(20);
                                     tableRow.addView(textView3);
                                     temp+=data.get(count).getGrade();
@@ -513,6 +519,8 @@ public class RankActivity  extends AppCompatActivity {
                             editor.putString("userRank", code.getAllUserRank());
                             editor.putString("userGroupRank", code.getUserGroupRank());
                             editor.commit();
+                            user_rank.setText(code.getAllUserRank());
+                            user_groupRank.setText(code.getUserGroupRank());
                         }
                     }
 
@@ -539,7 +547,7 @@ public class RankActivity  extends AppCompatActivity {
                 for (int i = 0; i < 4; i++) {
                     TextView textView = new TextView(RankActivity.this);
                     textView.setText(default_rank[4 * count + i]);
-                    textView.setGravity(Gravity.CENTER);
+                    textView.setGravity(Gravity.LEFT);
                     textView.setTextSize(20);
                     tableRow.addView(textView);
                 }
@@ -550,13 +558,13 @@ public class RankActivity  extends AppCompatActivity {
         //현재 해당 그룹 사용자 수가 7명 이상인 경우
         else {
             while (count < 7) {
-                if (count == 3 || count == 5) {
+                if (count == 3 || count == 4) {
                     TableRow tableRow1 = new TableRow(RankActivity.this);
                     tableRow1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     for (int i = 0; i < 4; i++) {
                         TextView textView = new TextView(RankActivity.this);
                         textView.setText(":");
-                        textView.setGravity(Gravity.CENTER);
+                        textView.setGravity(Gravity.LEFT);
                         textView.setTextSize(20);
                         tableRow1.addView(textView);
                     }
@@ -567,7 +575,7 @@ public class RankActivity  extends AppCompatActivity {
                 for (int i = 0; i < 4; i++) {
                     TextView textView = new TextView(RankActivity.this);
                     textView.setText(default_rank[4 * count + i]);
-                    textView.setGravity(Gravity.CENTER);
+                    textView.setGravity(Gravity.LEFT);
                     textView.setTextSize(20);
                     tableRow.addView(textView);
                 }

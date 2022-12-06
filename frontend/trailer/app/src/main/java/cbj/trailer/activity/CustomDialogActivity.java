@@ -47,82 +47,21 @@ public class CustomDialogActivity extends AppCompatActivity {
     private EditText input_fri;
     private EditText input_sat;
     private EditText input_sun;
-
-    private boolean mon_check;
-    private boolean tue_check;
-    private boolean wed_check;
-    private boolean thur_check;
-    private boolean fri_check;
-    private boolean sat_check;
-    private boolean sun_check;
-
     private String person_id;
 
-    private double mon = 3;
-    private double tue = 3;
-    private double wed = 3;
-    private double thur = 3;
-    private double fri = 3;
-    private double sat = 3;
-    private double sun = 3;
-
-    private Button delete_btn;
     private Button save_btn;
     private ServiceApi service;
     private SharedPreferences preferences;
 
-
-    public void targetWalk(InitialLookUpRequest data) {
-        service.userTargetWalk(data).enqueue(new Callback<TargetWalkResponse>() {
-            @Override
-            public void onResponse(Call<TargetWalkResponse> call, Response<TargetWalkResponse> response) {
-                TargetWalkResponse resultCode = response.body();
-                if (resultCode.getResultCode() == 200) {
-                    List<TargetWalk> data = resultCode.getMid();
-
-                    for (int i = 0; i < data.size(); i++) { // JSON data 돌면서 수행
-                        if (data.get(i).getDayOfWeek() == "mon") { // 월요일이면
-                            predict_mon_num.setText(String.valueOf(data.get(i).getSteps())); // 월요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "tue") { // 화요일이면
-                            predict_tue_num.setText(String.valueOf(data.get(i).getSteps())); // 화요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "wed") { // 수요일이면
-                            predict_wed_num.setText(String.valueOf(data.get(i).getSteps())); // 수요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "thur") { // 목요일이면
-                            predict_thur_num.setText(String.valueOf(data.get(i).getSteps())); // 목요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "fri") { // 금요일이면
-                            predict_fri_num.setText(String.valueOf(data.get(i).getSteps())); // 금요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "sat") { // 토요일이면
-                            predict_sat_num.setText(String.valueOf(data.get(i).getSteps())); // 토요일 걸음 수 받아오기
-                        }
-                        if (data.get(i).getDayOfWeek() == "sun") { // 일요일이면
-                            predict_sun_num.setText(String.valueOf(data.get(i).getSteps())); // 일요일 걸음 수 받아오기
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TargetWalkResponse> call, Throwable t) {
-                Toast.makeText(CustomDialogActivity.this, "통신 오류 발생", Toast.LENGTH_SHORT).show();
-                Log.e("통신 오류 발생", t.getMessage());
-            }
-        });
-    }
-
-    protected void onCreate (Bundle savedInstance){
-//        Bundle savedInstanceState;
-        Bundle savedInstanceState = null;
+    @Override
+    protected void onCreate (Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_dialog);
 
         service = RetrofitClient.getClient().create(ServiceApi.class);
 
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
+        Log.e("CustomDialog", "코드 실행");
 
         input_mon = findViewById(R.id.mon);
         input_tue = findViewById(R.id.tue);
@@ -141,425 +80,85 @@ public class CustomDialogActivity extends AppCompatActivity {
         predict_sun_num = findViewById(R.id.predict_sun_num);
 
 
-        delete_btn = findViewById(R.id.btn_delete);
         save_btn = findViewById(R.id.btn_save);
 
         person_id = preferences.getString("userId", "");
         targetWalk(new InitialLookUpRequest(person_id));
 
-        input_mon.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                mon_check = false;
-                boolean output = true;
-                String str_mon = s.toString();
-                if (!str_mon.equals("")) {
-                    for (int i = 0; i < str_mon.length(); i++) {
-                        char tmp = str_mon.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_mon.equals("")){
-                    mon = Double.parseDouble(predict_mon_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_mon);
-                    if (real_score == 1) {
-                        mon_check = true;
-                        mon = Double.parseDouble(predict_mon_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        mon_check = true;
-                        mon = Double.parseDouble(predict_mon_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        mon_check = true;
-                        mon = Double.parseDouble(predict_mon_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        mon_check = true;
-                        mon = Double.parseDouble(predict_mon_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        mon_check = true;
-                        mon = Double.parseDouble(predict_mon_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        mon_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("mon_steps", (int) mon);
-                editor.commit();
-            }
-        });
-
-        input_tue.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                tue_check = false;
-                boolean output = true;
-                String str_tue = s.toString();
-                if (!str_tue.equals("")) {
-                    for (int i = 0; i < str_tue.length(); i++) {
-                        char tmp = str_tue.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_tue.equals("")){
-                    tue = Double.parseDouble(predict_tue_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_tue);
-                    if (real_score == 1) {
-                        tue_check = true;
-                        tue = Double.parseDouble(predict_tue_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        tue_check = true;
-                        tue = Double.parseDouble(predict_tue_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        tue_check = true;
-                        tue = Double.parseDouble(predict_tue_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        tue_check = true;
-                        tue = Double.parseDouble(predict_tue_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        tue_check = true;
-                        tue = Double.parseDouble(predict_tue_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        tue_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("tue_steps", (int) tue);
-                editor.commit();
-            }
-        });
-
-        input_wed.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                wed_check = false;
-                boolean output = true;
-                String str_wed = s.toString();
-                if (!str_wed.equals("")) {
-                    for (int i = 0; i < str_wed.length(); i++) {
-                        char tmp = str_wed.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_wed.equals("")){
-                    wed = Double.parseDouble(predict_wed_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_wed);
-                    if (real_score == 1) {
-                        wed_check = true;
-                        wed = Double.parseDouble(predict_wed_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        wed_check = true;
-                        wed = Double.parseDouble(predict_wed_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        wed_check = true;
-                        wed = Double.parseDouble(predict_wed_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        wed_check = true;
-                        wed = Double.parseDouble(predict_wed_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        wed_check = true;
-                        wed = Double.parseDouble(predict_wed_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        wed_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("wed_steps", (int) wed);
-                editor.commit();
-            }
-        });
-
-        input_thur.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                thur_check = false;
-                boolean output = true;
-                String str_thur = s.toString();
-                if (!str_thur.equals("")) {
-                    for (int i = 0; i < str_thur.length(); i++) {
-                        char tmp = str_thur.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_thur.equals("")){
-                    thur = Double.parseDouble(predict_thur_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_thur);
-                    if (real_score == 1) {
-                        thur_check = true;
-                        thur = Double.parseDouble(predict_thur_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        thur_check = true;
-                        thur = Double.parseDouble(predict_thur_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        thur_check = true;
-                        thur = Double.parseDouble(predict_thur_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        thur_check = true;
-                        thur = Double.parseDouble(predict_thur_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        thur_check = true;
-                        thur = Double.parseDouble(predict_thur_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        thur_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("thur_steps", (int) thur);
-                editor.commit();
-            }
-        });
-
-        input_fri.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                fri_check = false;
-                boolean output = true;
-                String str_fri = s.toString();
-                if (!str_fri.equals("")) {
-                    for (int i = 0; i < str_fri.length(); i++) {
-                        char tmp = str_fri.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_fri.equals("")){
-                    fri = Double.parseDouble(predict_fri_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_fri);
-                    if (real_score == 1) {
-                        fri_check = true;
-                        fri = Double.parseDouble(predict_fri_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        fri_check = true;
-                        fri = Double.parseDouble(predict_fri_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        fri_check = true;
-                        fri = Double.parseDouble(predict_fri_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        fri_check = true;
-                        fri = Double.parseDouble(predict_fri_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        fri_check = true;
-                        fri = Double.parseDouble(predict_fri_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        fri_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("fri_steps", (int) fri);
-                editor.commit();
-            }
-        });
-
-        input_sat.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                sat_check = false;
-                boolean output = true;
-                String str_sat = s.toString();
-                if (!str_sat.equals("")) {
-                    for (int i = 0; i < str_sat.length(); i++) {
-                        char tmp = str_sat.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_sat.equals("")){
-                    sat = Double.parseDouble(predict_sat_num.getText().toString()) * 1.0;
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_sat);
-                    if (real_score == 1) {
-                        sat_check = true;
-                        sat = Double.parseDouble(predict_sat_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        sat_check = true;
-                        sat = Double.parseDouble(predict_sat_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        sat_check = true;
-                        sat = Double.parseDouble(predict_sat_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        sat_check = true;
-                        sat = Double.parseDouble(predict_sat_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        sat_check = true;
-                        sat = Double.parseDouble(predict_sat_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        sat_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("sat_steps", (int) sat);
-                editor.commit();
-            }
-        });
-
-        input_sun.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-                sun_check = false;
-                boolean output = true;
-                String str_sun = s.toString();
-                if (!str_sun.equals("")) {
-                    for (int i = 0; i < str_sun.length(); i++) {
-                        char tmp = str_sun.charAt(i);
-                        if (!('1' <= tmp && tmp <= '5')) {
-                            output = false;
-                        }
-                    }
-                }
-                else if(str_sun.equals("")){
-                    sun = Double.parseDouble(predict_sun_num.getText().toString()) * 1.0;
-
-                }
-                if (output){
-                    int real_score = Integer.parseInt(str_sun);
-                    if (real_score == 1) {
-                        sun_check = true;
-                        sun = Double.parseDouble(predict_sun_num.getText().toString()) * 0.5;
-                    }
-                    else if (real_score == 2) {
-                        sun_check = true;
-                        sun = Double.parseDouble(predict_sun_num.getText().toString()) * 0.8;
-                    }
-                    else if (real_score == 3){
-                        sun_check = true;
-                        sun = Double.parseDouble(predict_sun_num.getText().toString()) * 1.0;
-                    }
-                    else if (real_score == 4){
-                        sun_check = true;
-                        sun = Double.parseDouble(predict_sun_num.getText().toString()) * 1.2;
-                    }
-                    else if (real_score == 5){
-                        sun_check = true;
-                        sun = Double.parseDouble(predict_sun_num.getText().toString()) * 1.5;
-                    }
-                    else
-                        sun_check = false;
-                }
-
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("sun_steps", (int) sun);
-                editor.commit();
-            }
-        });
-
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startSave(new InitialLookUpRequest(person_id));
-            }
-        });
+                if(isStepScore(input_mon.getText().toString()) && isStepScore(input_tue.getText().toString())&&
+                        isStepScore(input_wed.getText().toString()) && isStepScore(input_thur.getText().toString()) && isStepScore(input_fri.getText().toString())
+                && isStepScore(input_sat.getText().toString()) && isStepScore(input_sun.getText().toString())){
+                    SharedPreferences.Editor editor = preferences.edit();
+                    if(input_mon.getText().toString().equals(""))
+                        editor.putString("input_mon", "3");
+                    else
+                        editor.putString("input_mon", input_mon.getText().toString());
+                    if(input_tue.getText().toString().equals(""))
+                        editor.putString("input_tue", "3");
+                    else
+                        editor.putString("input_tue", input_tue.getText().toString());
+                    if(input_wed.getText().toString().equals(""))
+                        editor.putString("input_wed", "3");
+                    else
+                        editor.putString("input_wed", input_wed.getText().toString());
+                    if(input_thur.getText().toString().equals(""))
+                        editor.putString("input_thu", "3");
+                    else
+                        editor.putString("input_thu", input_thur.getText().toString());
+                    if(input_fri.getText().toString().equals(""))
+                        editor.putString("input_fri", "3");
+                    else
+                        editor.putString("input_fri", input_fri.getText().toString());
+                    if(input_sat.getText().toString().equals(""))
+                        editor.putString("input_sat", "3");
+                    else
+                        editor.putString("input_sat", input_sat.getText().toString());
+                    if(input_sun.getText().toString().equals(""))
+                        editor.putString("input_sun", "3");
+                    else
+                        editor.putString("input_sun", input_sun.getText().toString());
+                    editor.commit();
 
-        delete_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startDelete(new InitialLookUpRequest(person_id));
+                    editor.putInt("mon_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_mon", "3")),Double.parseDouble(predict_mon_num.getText().toString())));
+                    editor.putInt("tue_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_tue", "3")),Double.parseDouble(predict_tue_num.getText().toString())));
+                    editor.putInt("wed_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_wed", "3")),Double.parseDouble(predict_wed_num.getText().toString())));
+                    editor.putInt("thu_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_thu", "3")),Double.parseDouble(predict_thur_num.getText().toString())));
+                    editor.putInt("fri_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_fri", "3")),Double.parseDouble(predict_fri_num.getText().toString())));
+                    editor.putInt("sat_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_sat", "3")),Double.parseDouble(predict_sat_num.getText().toString())));
+                    editor.putInt("sun_steps", stepsOfTarget(Integer.parseInt(preferences.getString("input_sun", "3")),Double.parseDouble(predict_sun_num.getText().toString())));
+                    editor.commit();
+                    startSave(new InitialLookUpRequest(person_id));
+                }
+                else
+                    Toast.makeText(CustomDialogActivity.this, "1에서 5까지의 숫자만 입력해주시기 바랍니다.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    public boolean isStepScore(String score){
+        if (score.equals(""))
+            return true;
+        else{
+            int real_score = Integer.parseInt(score);
+            if(1<= real_score && real_score <=5)
+                return true;
+            else
+                return false;
+        }
+    }
+    public int stepsOfTarget(int score, double step){
+        if(score == 1)
+            return (int)(step*0.5);
+        else if(score == 2)
+            return (int)(step*0.8);
+        else if(score == 3)
+            return (int)step;
+        else if(score == 4)
+            return (int)(step*1.2);
+        else
+            return (int)(step*1.5);
     }
     public void startSave(InitialLookUpRequest data){
         service.userTargetWalk(data).enqueue(new Callback<TargetWalkResponse>() {
@@ -569,6 +168,25 @@ public class CustomDialogActivity extends AppCompatActivity {
                 if(resultCode.getResultCode() == 200){
                     Toast.makeText(CustomDialogActivity.this, "입력한 내용이 저장되었습니다.", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    intent.putExtra("health_info_day", CustomDialogActivity.this.getIntent().getIntArrayExtra("health_info_day"));
+                    intent.putExtra("health_info_week", CustomDialogActivity.this.getIntent().getIntArrayExtra("health_info_week"));
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("scoreAccept", false);
+                    editor.commit();
+                    Log.w("월요일 추천 걸음 수", String.valueOf(preferences.getInt("mon_steps", 0)));
+                    Log.w("화요일 추천 걸음 수", String.valueOf(preferences.getInt("tue_steps", 0)));
+                    Log.w("수요일 추천 걸음 수", String.valueOf(preferences.getInt("wed_steps", 0)));
+                    Log.w("목요일 추천 걸음 수", String.valueOf(preferences.getInt("thu_steps", 0)));
+                    Log.w("금요일 추천 걸음 수", String.valueOf(preferences.getInt("fri_steps", 0)));
+                    Log.w("토요일 추천 걸음 수", String.valueOf(preferences.getInt("sat_steps", 0)));
+                    Log.w("일요일 추천 걸음 수", String.valueOf(preferences.getInt("sun_steps", 0)));
+                    Log.w("월요일 걸음 수 예측 점수", preferences.getString("input_mon", ""));
+                    Log.w("화요일 걸음 수 예측 점수", preferences.getString("input_tue", ""));
+                    Log.w("수요일 걸음 수 예측 점수", preferences.getString("input_wed", ""));
+                    Log.w("목요일 걸음 수 예측 점수", preferences.getString("input_thu", ""));
+                    Log.w("금요일 걸음 수 예측 점수", preferences.getString("input_fri", ""));
+                    Log.w("토요일 걸음 수 예측 점수", preferences.getString("input_sat", ""));
+                    Log.w("일요일 걸음 수 예측 점수", preferences.getString("input_sun", ""));
                     startActivity(intent);
                     finish();
                 }
@@ -582,16 +200,37 @@ public class CustomDialogActivity extends AppCompatActivity {
         });
     }
 
-    public void startDelete(InitialLookUpRequest data){
+    public void targetWalk(InitialLookUpRequest data) {
         service.userTargetWalk(data).enqueue(new Callback<TargetWalkResponse>() {
             @Override
             public void onResponse(Call<TargetWalkResponse> call, Response<TargetWalkResponse> response) {
                 TargetWalkResponse resultCode = response.body();
-                if(resultCode.getResultCode() == 200){
-                    Toast.makeText(CustomDialogActivity.this, "자동으로 3점이 입력됩니다.", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intent);
-                    finish();
+                if (resultCode.getResultCode() == 200) {
+                    List<TargetWalk> data = resultCode.getMid();
+
+                    for (int i = 0; i < data.size(); i++) { // JSON data 돌면서 수행
+                        if (data.get(i).getDayOfWeek().equals("mon")) { // 월요일이면
+                            predict_mon_num.setText(String.valueOf(data.get(i).getSteps())); // 월요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("tue")) { // 화요일이면
+                            predict_tue_num.setText(String.valueOf(data.get(i).getSteps())); // 화요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("wed")) { // 수요일이면
+                            predict_wed_num.setText(String.valueOf(data.get(i).getSteps())); // 수요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("thur")) { // 목요일이면
+                            predict_thur_num.setText(String.valueOf(data.get(i).getSteps())); // 목요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("fri")) { // 금요일이면
+                            predict_fri_num.setText(String.valueOf(data.get(i).getSteps())); // 금요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("sat")) { // 토요일이면
+                            predict_sat_num.setText(String.valueOf(data.get(i).getSteps())); // 토요일 걸음 수 받아오기
+                        }
+                        if (data.get(i).getDayOfWeek().equals("sun")) { // 일요일이면
+                            predict_sun_num.setText(String.valueOf(data.get(i).getSteps())); // 일요일 걸음 수 받아오기
+                        }
+                    }
                 }
             }
 

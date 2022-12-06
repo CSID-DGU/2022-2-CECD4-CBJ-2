@@ -196,7 +196,7 @@
 
             <TextView
                 android:id="@+id/rank_No"
-                android:layout_width="100dp"
+                android:layout_width="60dp"
                 android:layout_height="40dp"
                 android:background="@android:color/darker_gray"
                 android:backgroundTint="@android:color/darker_gray"
@@ -207,7 +207,7 @@
 
             <TextView
                 android:id="@+id/rank_nickname"
-                android:layout_width="110dp"
+                android:layout_width="100dp"
                 android:layout_height="40dp"
                 android:background="@android:color/darker_gray"
                 android:backgroundTint="@android:color/darker_gray"

@@ -198,14 +198,6 @@
                     >
 
                     <TextView
-                        android:id="@+id/predict_sun"
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="일"
-                        android:textSize="15sp" />
-
-                    <TextView
                         android:id="@+id/predict_mon"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
@@ -252,6 +244,14 @@
                         android:gravity="center"
                         android:text="토"
                         android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/predict_sun"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="일"
+                        android:textSize="15sp" />
                 </TableRow>
                 <TableRow
                     android:background="#FFFFFF"
@@ -259,7 +259,7 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/predict_sun_num"
+                        android:id="@+id/predict_mon_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -267,7 +267,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_mon_num"
+                        android:id="@+id/predict_tue_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -275,7 +275,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_tue_num"
+                        android:id="@+id/predict_wed_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -283,7 +283,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_wed_num"
+                        android:id="@+id/predict_thur_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -291,7 +291,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_thur_num"
+                        android:id="@+id/predict_fri_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -299,7 +299,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_fri_num"
+                        android:id="@+id/predict_sat_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -307,7 +307,7 @@
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/predict_sat_num"
+                        android:id="@+id/predict_sun_num"
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -410,7 +410,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/sat" />
 
-
+        <!--
         <Button
             android:id="@+id/btn_delete"
             android:layout_width="150dp"
@@ -423,6 +423,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/sat"
             app:layout_constraintVertical_bias="0.83" />
+            -->
 
         <Button
             android:id="@+id/btn_save"
@@ -431,10 +432,9 @@
             android:text="저장"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/btn_delete"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/sat"
-            app:layout_constraintVertical_bias="0.83" />
+            app:layout_constraintVertical_bias="1.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

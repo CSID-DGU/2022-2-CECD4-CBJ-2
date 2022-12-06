@@ -53,8 +53,14 @@ public class StepsPerDayFragment extends Fragment {
         int [] heart_score = new int[7];
 
         for(int i=0; i<MAX_X_VALUE; i++){
-            step_count[i] = data[i];
-            heart_score[i] = data[i+MAX_X_VALUE];
+            if (data[i] == -1){
+                step_count[i] = 0;
+                heart_score[i] = 0;
+            }
+            else {
+                step_count[i] = data[i];
+                heart_score[i] = data[i + MAX_X_VALUE];
+            }
         }
 
         BarData data1 = createChartData(step_count);

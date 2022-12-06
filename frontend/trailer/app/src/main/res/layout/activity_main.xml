@@ -7,6 +7,17 @@
     tools:context=".activity.MainActivity">
 
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar1"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        tools:ignore="MissingConstraints" />
+
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -51,7 +62,7 @@
         android:layout_marginRight="5dp"
         android:visibility="visible"
         app:layout_constraintEnd_toStartOf="@+id/my_page"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@id/pager" />
 
     <ImageButton
         android:id="@+id/my_page"
@@ -64,7 +75,7 @@
         android:visibility="visible"
         android:contentDescription="마이페이지"
         app:layout_constraintEnd_toEndOf="@+id/toolbar"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="@id/pager"/>
 
     <TextView
         android:layout_width="wrap_content"

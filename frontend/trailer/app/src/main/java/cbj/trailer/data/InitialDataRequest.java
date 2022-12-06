@@ -6,7 +6,7 @@ public class InitialDataRequest {
     @SerializedName("person_id")
     private String person_id;
 
-    @SerializedName("stepsOf3weeks")
+    @SerializedName("stepsOf3Weeks")
     private String[] stepsOf3weeks = new String[42];
     //['2022-01-01', '2002', '2022-01-02', '1000' ...]
 
