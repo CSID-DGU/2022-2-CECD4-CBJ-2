@@ -12,6 +12,7 @@ import cbj.trailer.data.LoginResponse;
 import cbj.trailer.data.LookUpRequest;
 
 import cbj.trailer.data.RankListResponse;
+import cbj.trailer.data.TargetWalkResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Headers;
@@ -45,5 +46,10 @@ public interface ServiceApi {
     @Headers({"Content-Type: application/json"})
     @POST("/rank")                                           // 그룹화된 랭크 조회 API
     Call<RankListResponse> userRank(@Body LookUpRequest data);
+
+    @Headers({"Content-Type: application/json"})
+    @POST("/targetsteps")                                          // 그룹화된 랭크 조회 API
+    Call<TargetWalkResponse> userTargetWalk(@Body InitialLookUpRequest data);
+
 
 }
