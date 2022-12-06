@@ -9,6 +9,12 @@ public class LoginResponse {
     @SerializedName("nickname")
     private String nickname;
 
+    @SerializedName("age")
+    private int userAge;
+
+    @SerializedName("gender")
+    private String gender;
+
     @SerializedName("ResultCode")
     private int ResultCode;
 
@@ -16,6 +22,8 @@ public class LoginResponse {
         return person_id;
     }
     public String getUserNickname() { return nickname; }
+    public int getUserAge(){return userAge;}
+    public String getUserGender(){return gender;}
     public int getCode() {
         return ResultCode;
     }
