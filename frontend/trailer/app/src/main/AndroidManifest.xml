@@ -40,6 +40,12 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="true" />
+        <activity
+            android:name=".activity.MyPageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.RankActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

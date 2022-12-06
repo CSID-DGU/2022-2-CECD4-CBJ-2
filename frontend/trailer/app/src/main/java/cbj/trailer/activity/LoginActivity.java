@@ -90,6 +90,18 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
 
+        //////////////////
+        Button test = findViewById(R.id.test_btn);
+        test.setOnClickListener(new View.OnClickListener() {       // 버튼을 클릭 했을 때 모션을 정의
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MyPageActivity.class);
+                startActivity(intent);
+                finish();// 회원가입 액티비티로 넘어감
+            }                 // 로그인을 시도함
+        });
+        /////////////////
+
         service = RetrofitClient.getClient().create(ServiceApi.class);
 
         title = (TextView)findViewById(R.id.login_main);
@@ -233,6 +245,8 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("userId", user.getUserId());
                     editor.putString("userNickname", user.getUserNickname());
+                    editor.putString("userAge", Integer.toString(user.getUserAge()));
+                    editor.putString("userGender", user.getUserGender());
                     editor.commit();
 
                     //구글 로그인
