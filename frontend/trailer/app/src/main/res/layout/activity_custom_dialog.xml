@@ -70,7 +70,7 @@
                         android:layout_width="245dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="많이 걸음(50% 이상)"
+                        android:text="많이 걸음(150% 이상)"
                         android:textSize="15sp" />
                 </TableRow>
                 <TableRow
@@ -91,7 +91,7 @@
                         android:layout_width="245dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="조금 많이 걸음(20% 이상)"
+                        android:text="조금 많이 걸음(120% 이상)"
                         android:textSize="15sp" />
                 </TableRow>
                 <TableRow
@@ -112,7 +112,7 @@
                         android:layout_width="245dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="비슷하게 걸음(0% 변화)"
+                        android:text="비슷하게 걸음(100% 이상)"
                         android:textSize="15sp" />
                 </TableRow>
                 <TableRow
@@ -133,7 +133,7 @@
                         android:layout_width="245dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="조금 적게 걸음 (-20% 이상)"
+                        android:text="조금 적게 걸음 (80% 이상)"
                         android:textSize="15sp" />
                 </TableRow>
                 <TableRow
@@ -154,7 +154,7 @@
                         android:layout_width="245dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="많이 적게 걸음 (-50% 이상)"
+                        android:text="많이 적게 걸음 (50% 이상)"
                         android:textSize="15sp" />
                 </TableRow>
             </TableLayout>

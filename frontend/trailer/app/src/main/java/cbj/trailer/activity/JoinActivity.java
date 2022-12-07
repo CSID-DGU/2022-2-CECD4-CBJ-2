@@ -98,8 +98,8 @@ public class JoinActivity extends AppCompatActivity {
         join_nickname = findViewById(R.id.join_nickname);
         join_age = findViewById(R.id.join_age);
         join_sex = findViewById(R.id.join_sex);
-        join_homeAddress = findViewById(R.id.join_homeAddress);
-        join_companyAddress = findViewById(R.id.join_companyAddress);
+        //join_homeAddress = findViewById(R.id.join_homeAddress);
+        //join_companyAddress = findViewById(R.id.join_companyAddress);
         join_movieTheater = findViewById(R.id.join_movieTheater);
         join_caffe = findViewById(R.id.join_caffe);
         join_library = findViewById(R.id.join_library);
@@ -264,7 +264,12 @@ public class JoinActivity extends AppCompatActivity {
             }
         });
 
+        input_homeAddress = true;
+        homeAddress = "서울";
+        input_companyAddress = true;
+        companyAddress = "부산";
         //집 주소 입력했는지 확인
+        /**
         join_homeAddress.addTextChangedListener(new TextWatcher() {              // login 액티비티에서 설명했으므로 요약 설명
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -306,7 +311,7 @@ public class JoinActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
             }
-        });
+        });*/
 
         //원하는 운동강도 선택
         String [] exerciseIntensity_type = getResources().getStringArray(R.array.exerciseIntensityItems);
