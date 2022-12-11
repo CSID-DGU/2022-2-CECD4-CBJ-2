@@ -734,7 +734,7 @@ public class LoginActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         for(int i=0; i<42; i++)
-            stepsOf3weeks[i] = "0";
+            stepsOf3weeks[i] = "-1";
         for (int count = 21; count > 0; count--) {
             final Calendar cal2 = Calendar.getInstance();
             Date now2 = Calendar.getInstance().getTime();

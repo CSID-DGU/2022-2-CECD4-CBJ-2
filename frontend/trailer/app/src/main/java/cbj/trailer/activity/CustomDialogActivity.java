@@ -61,7 +61,6 @@ public class CustomDialogActivity extends AppCompatActivity {
         service = RetrofitClient.getClient().create(ServiceApi.class);
 
         preferences = this.getSharedPreferences("data", Context.MODE_PRIVATE);
-        Log.e("CustomDialog", "코드 실행");
 
         input_mon = findViewById(R.id.mon);
         input_tue = findViewById(R.id.tue);
