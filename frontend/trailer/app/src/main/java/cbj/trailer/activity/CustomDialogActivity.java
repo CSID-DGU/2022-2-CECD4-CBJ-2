@@ -173,20 +173,6 @@ public class CustomDialogActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putBoolean("scoreAccept", false);
                     editor.commit();
-                    Log.w("월요일 추천 걸음 수", String.valueOf(preferences.getInt("mon_steps", 0)));
-                    Log.w("화요일 추천 걸음 수", String.valueOf(preferences.getInt("tue_steps", 0)));
-                    Log.w("수요일 추천 걸음 수", String.valueOf(preferences.getInt("wed_steps", 0)));
-                    Log.w("목요일 추천 걸음 수", String.valueOf(preferences.getInt("thu_steps", 0)));
-                    Log.w("금요일 추천 걸음 수", String.valueOf(preferences.getInt("fri_steps", 0)));
-                    Log.w("토요일 추천 걸음 수", String.valueOf(preferences.getInt("sat_steps", 0)));
-                    Log.w("일요일 추천 걸음 수", String.valueOf(preferences.getInt("sun_steps", 0)));
-                    Log.w("월요일 걸음 수 예측 점수", preferences.getString("input_mon", ""));
-                    Log.w("화요일 걸음 수 예측 점수", preferences.getString("input_tue", ""));
-                    Log.w("수요일 걸음 수 예측 점수", preferences.getString("input_wed", ""));
-                    Log.w("목요일 걸음 수 예측 점수", preferences.getString("input_thu", ""));
-                    Log.w("금요일 걸음 수 예측 점수", preferences.getString("input_fri", ""));
-                    Log.w("토요일 걸음 수 예측 점수", preferences.getString("input_sat", ""));
-                    Log.w("일요일 걸음 수 예측 점수", preferences.getString("input_sun", ""));
                     startActivity(intent);
                     finish();
                 }

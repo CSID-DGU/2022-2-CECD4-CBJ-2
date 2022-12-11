@@ -90,19 +90,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);                        // xml, java 연결
 
-        //////////////////
-        /**
-        Button test = findViewById(R.id.test_btn);
-        test.setOnClickListener(new View.OnClickListener() {       // 버튼을 클릭 했을 때 모션을 정의
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MyPageActivity.class);
-                startActivity(intent);
-                finish();// 회원가입 액티비티로 넘어감
-            }                 // 로그인을 시도함
-        });*/
-        /////////////////
-
         service = RetrofitClient.getClient().create(ServiceApi.class);
 
         title = (TextView)findViewById(R.id.login_main);
